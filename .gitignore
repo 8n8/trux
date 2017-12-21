@@ -1,0 +1,9 @@
+*
+!.gitignore
+!LICENSE
+!package.yaml
+!README.md
+!Setup.hs
+!src/
+!stack.yaml
+!*.hs
