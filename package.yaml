@@ -2,7 +2,7 @@ name: trux
 version: 1.0.0
 synopsis: Trux produces top-quality scientific documents from a plan-text document markup language
 maintainer: 5-o
-license: UNLICENSED
+license: AllRightsReserved
 
 ghc-options: -Wall -O2
 
@@ -13,4 +13,16 @@ dependencies:
 executables:
   trux:
     main: Main.hs
-    source-dirs: src 
+    source-dirs:
+      - src 
+      - app
+
+tests:
+  spec:
+    main: Test.hs
+    source-dirs:
+      - test
+      - src
+    dependencies:
+      - tasty
+      - tasty-hunit

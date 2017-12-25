@@ -4,6 +4,8 @@
 !package.yaml
 !README.md
 !Setup.hs
+!app/
 !src/
+!test/
 !stack.yaml
 !*.hs
