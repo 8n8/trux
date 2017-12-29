@@ -1,146 +1,229 @@
--- | It provides a function for parsing a document and datatypes to 
--- represent it after parsing.
+module Parser ( parseDocument, combinedParser ) where
 
-module Parser (parseDocument, Node(..), FunctionName(..) ) where
-
-import Control.Monad ( void )
+import Text.Megaparsec
+import Text.Megaparsec.Char
 import Data.Void ( Void )
-import Text.Megaparsec ( eof, lookAhead, Parsec, some, try, (<|>) )
-import Text.Megaparsec.Char ( char, notChar, oneOf, string )
+import Control.Monad
 
 type Parser = Parsec Void String
 
--- | It is the basic component of the document, either an atom or a
--- function.  An atom is the smallest possible unit.  A function contains
--- one or more nodes as its arguments.
-data Node = Atom String | Function FunctionName [Node] deriving (Show, Eq)
+preamble :: String
+preamble =
+    "\\documentclass{article}\n\
+    \\\begin{document}\n"
 
-data Author = Author [AuthorChar]
+parseDocument :: Parser String
+parseDocument = try $ do
+    content <- fmap concat $ try $ some $ combinedParser
+    return $ preamble ++ content ++ "\\end{document}"
 
--- | The built-in functions.
-data FunctionName = 
-    Author |
-    DisplayMath |
-    Document |
-    InlineMath |
-    Quote |
-    Title
-    deriving (Show, Eq)
+combinedParser :: Parser String
+combinedParser =
+    parseDisplayMath <|>
+    parseAuthor <|>
+    parseOrdinaryText <|>
+    parseInlineMath
 
--- | It parses the whole document.
-parseDocument :: Parser [Node]
-parseDocument = do
-    nodes <- trySome parseNode
-    eof
-    return nodes
+parseDisplayMath :: Parser String
+parseDisplayMath = dbg "parseDisplayMath" $ try $ do
+    _ <- string "math"
+    _ <- try $ char ' ' 
+    _ <- try $ char '{'
+    _ <- (try $ char ' ') <|> (try $ newline)
+    content <- parseMathSymbols
+    return $ "\\[" ++ content ++ "\\]"
 
--- | It parses one node, which is either an atom or a function.
-parseNode :: Parser Node
-parseNode = parseAtom <|> parseFunction
+parseInlineMath :: Parser String
+parseInlineMath = dbg "parseInlineMath" $ try $ do
+    _ <- try $ char '$'
+    _ <- try $ char ' '
+    _ <- try $ char '{'
+    _ <- (try $ char ' ') <|> (try $ newline)
+    content <- parseMathSymbols
+    _ <- try $ char '}'
+    (void $ try $ char ' ') <|> (void $ try $ newline) <|> (try eof)
+    return $ "$" ++ content ++ "$"
 
--- | A non-consuming version of the 'some' function from Text.MegaParsec.
--- It keeps trying to parse a new thing of type 'a' till it fails, but
--- does not consume the thing that made it fail.
-trySome :: Parser a -> Parser [a]
-trySome = try . some
+parseMathSymbols :: Parser String
+parseMathSymbols = fmap concat $ try $ some $ 
+    parseMathCharAndEnding <|> parseSpecialMathSymbolAndEnding
 
--- | Parses one function.
-parseFunction :: Parser Node
-parseFunction = try $ do
-    funcName <- parseFunctionName
-    nodes <- trySome parseNode
-    parseCloseBracket
-    return $ Function funcName nodes
+parseSpecialMathSymbolAndEnding :: Parser String
+parseSpecialMathSymbolAndEnding = try $ do
+    symbol <- parseSpecialMathSymbol
+    _ <- (try $ char ' ') <|> (try $ lookAhead $ char '}')
+    return symbol
 
--- | It parses the name of a function.  It can tell the difference between
--- a function name and an atom because a function name is followed by a 
--- space and an open curly bracket.
-parseFunctionName :: Parser FunctionName
-parseFunctionName = try $ do
-    name <- parseFunctionKeyword
-    parseOneSpace
-    parseOpenBracket
-    return name
+parseSpecialMathSymbol :: Parser String
+parseSpecialMathSymbol = try $
+    parseIntegral <|>
+    parsePower <|>
+    parseSubscript
 
--- | It tries to parse one of the built-in functions.  It tries one after
--- the other till one works or they all fail.
-parseFunctionKeyword :: Parser FunctionName
-parseFunctionKeyword = 
-    parseFuncTitle <|>
-    parseFuncAuthor <|>
-    parseFuncQuote <|>
-    parseFuncInlineMath <|>
-    parseFuncDisplayMath
+parseIntegral :: Parser String
+parseIntegral = try $ do
+    _ <- string "int"
+    return "\\int"
 
-parseFuncTitle :: Parser FunctionName
-parseFuncTitle = string "title" >> return Title
+parsePower :: Parser String
+parsePower = try $ do
+    _ <- string "^{"
+    content <- parseMathSymbols
+    _ <- try $ char '}'
+    return $ "^{" ++ content ++ "}"
 
-parseFuncAuthor :: Parser FunctionName
-parseFuncAuthor = string "author" >> return Author
+parseSubscript :: Parser String
+parseSubscript = try $ do
+    _ <- string "_{"
+    content <- parseMathSymbols
+    _ <- try $ char '}'
+    return $ "_{" ++ content ++ "}"
 
-parseFuncQuote :: Parser FunctionName
-parseFuncQuote = string "quote" >> return Quote
+parseMathCharAndEnding :: Parser String
+parseMathCharAndEnding = try $ do
+    symbol <- parseSingleMathChar
+    _ <- (try $ char ' ') <|> (try $ lookAhead $ char '}')
+    return symbol
+    
+parseSingleMathChar :: Parser String
+parseSingleMathChar = try $
+    (fmap (\x -> [x]) $ try $ oneOf singleCharMathSymbols) <|>
+    parsePercentage <|>
+    parseDollar
 
--- | It parses a character, but does not consume it if it fails.
-tryChar :: Char -> Parser Char
-tryChar = try . char
+-- parseLeftCurvedBracket :: Parser String
+-- parseLeftCurvedBracket = try $ do
+--     _ <- char '('
+--     return "\\left("
+-- 
+-- parseRightCurvedBracket :: Parser String
+-- parseRightCurvedBracket = try $ do
+--     _ <- char ')'
+--     return "\\right)"
+-- 
+-- parseLeftSquareBracket :: Parser String
+-- parseLeftSquareBracket = try $ do
+--     _ <- char '['
+--     return "\\left["
+-- 
+-- parseRightSquareBracket :: Parser String
+-- parseRightSquareBracket = try $ do
+--     _ <- char ']'
+--     return "\\right]"
 
-parseFuncInlineMath :: Parser FunctionName
-parseFuncInlineMath = tryChar '$' >> return InlineMath
+singleCharMathSymbols :: String
+singleCharMathSymbols =
+    "abcdefghijklmnopqrstuvwxyz\
+    \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+    \!£$%-=+/.><,|"
 
-parseFuncDisplayMath :: Parser FunctionName
-parseFuncDisplayMath = string "align" >> return DisplayMath
+parseOrdinaryText :: Parser String
+parseOrdinaryText = dbg "parseOrdinaryText" $ fmap concat $ try $ some $ do
+    word <- parseWord
+    whitespace <- parseWhitespace <|> parseBracketAfterWord <|> parseEofAfterWord
+    return $ word ++ whitespace
 
--- | An open bracket should always be followed by one space or newline.
-parseOpenBracket :: Parser ()
-parseOpenBracket = try $ void $ tryChar '{' >> parseOneSpace
+parseWord :: Parser String
+parseWord = fmap concat $ try $ some $ do
+    word <- parseWordChar <|> parseSpecialChar
+    notFollowedBy $ lookAhead $ void $ string " { " 
+    notFollowedBy $ lookAhead $ (void $ string " {") >> (void $ try $ eof) 
+    notFollowedBy $ lookAhead $ (void $ string " {") >> (void $ try $ newline) 
+    return word
 
--- | It parses the end of input but does not consume it if it fails.
-tryEof :: Parser ()
-tryEof = try eof
+parseEofAfterWord :: Parser String
+parseEofAfterWord = try $ lookAhead $ eof >> return ""
 
--- | A closing curly bracket should always be followed by a space, a
--- newline or the end of input.
-parseCloseBracket :: Parser ()
-parseCloseBracket = try $ tryChar '}' >> parseOneSpace <|> tryEof
+parseBracketAfterWord :: Parser String
+parseBracketAfterWord = try $ lookAhead $ char '}' >> return ""
 
--- | It parses one space or newline without consuming it.
-parseOneSpace :: Parser ()
-parseOneSpace = try $ void $ oneOf spaceChars 
+parseWordChar :: Parser String
+parseWordChar = fmap (\x -> [x]) $ oneOf wordChars
 
--- | An atom is one of the basic units of the language.  It is one or more
--- of the standard English keyboard characters with a space or newline on
--- each side of it.
-parseAtom :: Parser Node
-parseAtom = try $ fmap Atom parseAtomString
+parseWhitespace :: Parser String
+parseWhitespace = try $
+    parse2newlines <|>
+    parse1newline <|>
+    parse1space
 
--- | It is used to distinguish atoms from function names.  Function names
--- are followed by a space and an open curly bracket, atoms by a space and
--- a non-space non-curly-bracket character.
-parseNoOpenBracket :: Parser ()
-parseNoOpenBracket = lookAhead $ try $ void $ notChar '{'
+parse1space :: Parser String
+parse1space = try $ char ' ' >> return " "
 
--- | It parses the characters allowed in atoms till it fails, then a space
--- and then checks there is no open curly bracket.
-parseAtomString :: Parser String
-parseAtomString = try $ do
-    atom <- trySome parseAtomChar
-    parseOneSpaceAndNoOpenBracket <|> tryEof
-    return atom
+parse1newline :: Parser String
+parse1newline = try $ newline >> return "\n"
 
-parseOneSpaceAndNoOpenBracket :: Parser ()
-parseOneSpaceAndNoOpenBracket = try $ parseOneSpace >> parseNoOpenBracket
+parse2newlines :: Parser String
+parse2newlines = try $ do
+    _ <- try newline
+    _ <- try newline
+    return "\n\n"
 
-parseAtomChar :: Parser Char
-parseAtomChar = try $ oneOf atomChars
-
--- | The set of characters that is allowed in an atom.
-atomChars :: String
-atomChars = 
+wordChars :: String
+wordChars = 
     "abcdefghijklmnopqrstuvwxyz\
     \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
     \01234567890\
-    \`¬!\"£$%^&*()_-+=[];:'@#~,<.>/?\\|"
+    \!\"£*()-+=[];:'@#,<.>/?|"
 
-spaceChars :: String
-spaceChars = " \n\r"
+parseSpecialChar :: Parser String
+parseSpecialChar = try $
+    parseDollar <|>
+    parsePercentage <|>
+    parseUnderscore <|>
+    parseTilde <|>
+    parseBackslash <|>
+    parseAmpersand
+
+parseAmpersand :: Parser String
+parseAmpersand = try $ do
+    _ <- char '&'
+    return "\\&"
+
+parseDollar :: Parser String
+parseDollar = try $ do
+    _ <- char '$'
+    return "\\$"
+
+parsePercentage :: Parser String
+parsePercentage = try $ do
+    _ <- char '%'
+    return "\\%"
+
+parseUnderscore :: Parser String
+parseUnderscore = try $ do
+    _ <- char '_'
+    return "\\_"
+
+-- REMEMBER TO INCLUDE textcomp PACKAGE IN PREAMBLE
+parseTilde :: Parser String
+parseTilde = try $ do
+    _ <- char '~'
+    return "\\textasciitilde "
+
+parseBackslash :: Parser String
+parseBackslash = try $ do
+    _ <- char '\\'
+    return "\\textbackslash "
+
+parseAuthor :: Parser String
+parseAuthor = dbg "parseAuthor" $ try $ do
+    _ <- string "author" 
+    _ <- try $ char ' '
+    _ <- try $ char '{'
+    (void $ try $ char ' ') <|> (void $ try newline)
+    author <- try $ some $ (try $ oneOf authorChars) <|> parseAuthorSpace
+    _ <- try $ char ' '
+    _ <- try $ char '}'
+    (void $ try $ char ' ') <|> (void $ try newline) <|> (void $ try eof)
+    return $ "\\author{" ++ author ++ "}"
+
+parseAuthorSpace :: Parser Char
+parseAuthorSpace = try $ do
+    _ <- try $ char ' '
+    notFollowedBy $ lookAhead $ string "} "
+    notFollowedBy $ lookAhead $ (try $ char '}') >> try eof
+    notFollowedBy $ lookAhead $ (try $ char '}') >> newline
+    return ' ' 
+
+authorChars :: String
+authorChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.'-"
