@@ -1,14 +1,20 @@
 module Main where
 
-import System.Environment
-import qualified Parser as P
-import Text.Megaparsec
+import System.Environment ( getArgs )
+import Parser ( parseDocument )
+import Text.Megaparsec ( parse, parseErrorPretty )
 
 main :: IO ()
-main = firstArgument >>= testParser
+main = do
+  filepath <- fmap head getArgs
+  filecontents <- readFile filepath
+  case parse parseDocument filepath filecontents of
+      Left err -> putStrLn (parseErrorPretty err)
+      Right latex -> writeFile ((striptx filepath) ++ ".tex") latex
 
-firstArgument :: IO String
-firstArgument = fmap head getArgs
+striptx :: String -> String
+striptx filepath =
+    case (reverse filepath) of
+        'x' : 't' : '.' : htapelif -> reverse htapelif
+        _ -> filepath
 
-testParser :: String -> IO ()
-testParser = parseTest P.parseDocument

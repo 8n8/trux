@@ -1,4 +1,4 @@
-module Parser ( parseDocument, combinedParser ) where
+module Parser ( parseDocument, wordChars ) where
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -7,42 +7,86 @@ import Control.Monad
 
 type Parser = Parsec Void String
 
-preamble :: String
-preamble =
-    "\\documentclass{article}\n\
-    \\\begin{document}\n"
-
 parseDocument :: Parser String
-parseDocument = try $ do
-    content <- fmap concat $ try $ some $ combinedParser
-    return $ preamble ++ content ++ "\\end{document}"
+parseDocument = try $ titleAndBody <|> onlyBody <|> onlyTitleInfo
 
-combinedParser :: Parser String
-combinedParser =
-    parseDisplayMath <|>
-    parseAuthor <|>
-    parseOrdinaryText <|>
-    parseInlineMath
+titleAndBody :: Parser String
+titleAndBody = try $ do
+    titleinfo <- parseTitleInfo
+    body <- parseBody
+    return $ makeLatex (Just titleinfo) (Just body)
+
+parseTitleInfo :: Parser String
+parseTitleInfo = try $
+    parseTitleAuthor <|> parseAuthorTitle
+     
+parseTitleAuthor :: Parser String
+parseTitleAuthor = try $ do
+    title <- parseTitle
+    author <- parseAuthor
+    return $ title ++ author
+
+parseAuthorTitle :: Parser String
+parseAuthorTitle = try $ do
+    author <- parseAuthor
+    title <- parseTitle
+    return $ title ++ author
+
+onlyTitleInfo :: Parser String
+onlyTitleInfo = try $ do
+    author <- parseAuthor
+    eof
+    return $ makeLatex (Just author) Nothing
+
+onlyBody :: Parser String
+onlyBody = try $ do
+    body <- parseBody
+    return $ makeLatex Nothing (Just body)
+
+makeLatex :: Maybe String -> Maybe String -> String
+makeLatex Nothing Nothing = ""
+makeLatex Nothing (Just body) =
+    "\\documentclass{article}\\begin{document}" ++
+        body ++ "\\end{document}"
+makeLatex (Just titleinfo) Nothing =
+    "\\documentclass{article}" ++ titleinfo ++
+        "\\begin{document}\\maketitle \\end{document}"
+makeLatex (Just titleinfo) (Just body) =
+    "\\documentclass{article}" ++ titleinfo ++
+        "\\begin{document}\\maketitle " ++ body ++ "\\end{document}"
+
+parseBody :: Parser String
+parseBody = fmap concat $ try $ do
+    content <- try $ some $
+        parseOrdinaryText <|> parseDisplayMath <|> parseInlineMath
+    eof
+    return content
 
 parseDisplayMath :: Parser String
-parseDisplayMath = dbg "parseDisplayMath" $ try $ do
+parseDisplayMath = try $ do
     _ <- string "math"
-    _ <- try $ char ' ' 
-    _ <- try $ char '{'
-    _ <- (try $ char ' ') <|> (try $ newline)
-    content <- parseMathSymbols
+    content <- parseMathEnvironment
     return $ "\\[" ++ content ++ "\\]"
 
+parseClosingCurlyBracket :: Parser ()
+parseClosingCurlyBracket = try $ do
+    _ <- try $ char '}'
+    try $ void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof)
+
 parseInlineMath :: Parser String
-parseInlineMath = dbg "parseInlineMath" $ try $ do
+parseInlineMath = try $ do
     _ <- try $ char '$'
+    content <- parseMathEnvironment
+    return $ "$" ++ content ++ "$"
+
+parseMathEnvironment :: Parser String
+parseMathEnvironment = try $ do
     _ <- try $ char ' '
     _ <- try $ char '{'
-    _ <- (try $ char ' ') <|> (try $ newline)
+    _ <- try (char ' ') <|> try newline
     content <- parseMathSymbols
-    _ <- try $ char '}'
-    (void $ try $ char ' ') <|> (void $ try $ newline) <|> (try eof)
-    return $ "$" ++ content ++ "$"
+    parseClosingCurlyBracket
+    return content
 
 parseMathSymbols :: Parser String
 parseMathSymbols = fmap concat $ try $ some $ 
@@ -51,30 +95,37 @@ parseMathSymbols = fmap concat $ try $ some $
 parseSpecialMathSymbolAndEnding :: Parser String
 parseSpecialMathSymbolAndEnding = try $ do
     symbol <- parseSpecialMathSymbol
-    _ <- (try $ char ' ') <|> (try $ lookAhead $ char '}')
+    void (try $ char ' ') <|> void (try newline) <|> void (try $ lookAhead $ char '}')
     return symbol
 
 parseSpecialMathSymbol :: Parser String
 parseSpecialMathSymbol = try $
     parseIntegral <|>
     parsePower <|>
-    parseSubscript
+    parseSubscript <|>
+    parseMathNumber
+
+parseMathNumber :: Parser String
+parseMathNumber = try $ some $ digitChar <|> char '.'
 
 parseIntegral :: Parser String
 parseIntegral = try $ do
     _ <- string "int"
-    return "\\int"
+    return "\\int "
 
 parsePower :: Parser String
 parsePower = try $ do
-    _ <- string "^{"
+    _ <- string "^ { "
     content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "^{" ++ content ++ "}"
 
 parseSubscript :: Parser String
 parseSubscript = try $ do
-    _ <- string "_{"
+    _ <- char '_'
+    _ <- char ' '
+    _ <- char '{'
+    _ <- char ' '
     content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "_{" ++ content ++ "}"
@@ -82,12 +133,12 @@ parseSubscript = try $ do
 parseMathCharAndEnding :: Parser String
 parseMathCharAndEnding = try $ do
     symbol <- parseSingleMathChar
-    _ <- (try $ char ' ') <|> (try $ lookAhead $ char '}')
+    _ <- try (char ' ') <|> try newline <|> try (lookAhead $ char '}') 
     return symbol
     
 parseSingleMathChar :: Parser String
 parseSingleMathChar = try $
-    (fmap (\x -> [x]) $ try $ oneOf singleCharMathSymbols) <|>
+    fmap (: []) (try $ oneOf singleCharMathSymbols) <|>
     parsePercentage <|>
     parseDollar
 
@@ -118,33 +169,40 @@ singleCharMathSymbols =
     \!£$%-=+/.><,|"
 
 parseOrdinaryText :: Parser String
-parseOrdinaryText = dbg "parseOrdinaryText" $ fmap concat $ try $ some $ do
+parseOrdinaryText = try $ do
+    void $ try $ char '`' 
+    content <- parseTextQuoteContent
+    void $ try $ char '`'
+    void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof)
+    return content
+
+parseTextQuoteContent :: Parser String
+parseTextQuoteContent = fmap concat $ try $ some $ do
+    whitespace1 <- parseWhitespace <|> parseEndQuoteNoConsume
     word <- parseWord
-    whitespace <- parseWhitespace <|> parseBracketAfterWord <|> parseEofAfterWord
-    return $ word ++ whitespace
+    whitespace2 <- parseWhitespace <|> parseEndQuoteNoConsume
+    return $ whitespace1 ++ word ++ whitespace2
+
+parseEndQuoteNoConsume :: Parser String
+parseEndQuoteNoConsume = do
+    void $ lookAhead $ try $ char '`'
+    return "" 
 
 parseWord :: Parser String
-parseWord = fmap concat $ try $ some $ do
-    word <- parseWordChar <|> parseSpecialChar
-    notFollowedBy $ lookAhead $ void $ string " { " 
-    notFollowedBy $ lookAhead $ (void $ string " {") >> (void $ try $ eof) 
-    notFollowedBy $ lookAhead $ (void $ string " {") >> (void $ try $ newline) 
-    return word
-
-parseEofAfterWord :: Parser String
-parseEofAfterWord = try $ lookAhead $ eof >> return ""
-
-parseBracketAfterWord :: Parser String
-parseBracketAfterWord = try $ lookAhead $ char '}' >> return ""
+parseWord = fmap concat $ try $ some $ parseWordChar <|> parseSpecialChar
 
 parseWordChar :: Parser String
-parseWordChar = fmap (\x -> [x]) $ oneOf wordChars
+parseWordChar = (: []) <$> oneOf wordChars
 
 parseWhitespace :: Parser String
 parseWhitespace = try $
     parse2newlines <|>
     parse1newline <|>
-    parse1space
+    parse1space <|>
+    return ""
+
+-- parseNoWhiteSpace :: Parser String
+-- parseNoWhiteSpace = return ""
 
 parse1space :: Parser String
 parse1space = try $ char ' ' >> return " "
@@ -206,24 +264,23 @@ parseBackslash = try $ do
     return "\\textbackslash "
 
 parseAuthor :: Parser String
-parseAuthor = dbg "parseAuthor" $ try $ do
+parseAuthor = try $ do
     _ <- string "author" 
+    content <- parsePreambleField
+    return $ "\\author{" ++ content ++ "}"
+
+parseTitle :: Parser String
+parseTitle = try $ do
+    _ <- string "title"
+    content <- parsePreambleField
+    return $ "\\title{" ++ content ++ "}"
+
+parsePreambleField :: Parser String
+parsePreambleField = try $ do
     _ <- try $ char ' '
     _ <- try $ char '{'
-    (void $ try $ char ' ') <|> (void $ try newline)
-    author <- try $ some $ (try $ oneOf authorChars) <|> parseAuthorSpace
-    _ <- try $ char ' '
+    void (try $ char ' ') <|> void (try newline)
+    content <- parseOrdinaryText
     _ <- try $ char '}'
-    (void $ try $ char ' ') <|> (void $ try newline) <|> (void $ try eof)
-    return $ "\\author{" ++ author ++ "}"
-
-parseAuthorSpace :: Parser Char
-parseAuthorSpace = try $ do
-    _ <- try $ char ' '
-    notFollowedBy $ lookAhead $ string "} "
-    notFollowedBy $ lookAhead $ (try $ char '}') >> try eof
-    notFollowedBy $ lookAhead $ (try $ char '}') >> newline
-    return ' ' 
-
-authorChars :: String
-authorChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.'-"
+    void (try $ char ' ') <|> void (try newline) <|> void (try $ lookAhead eof)
+    return content
