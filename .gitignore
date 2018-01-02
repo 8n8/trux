@@ -9,3 +9,5 @@
 !test/
 !stack.yaml
 !*.hs
+!log.txt
+!trux.w

@@ -35,8 +35,9 @@ parseAuthorTitle = try $ do
 onlyTitleInfo :: Parser String
 onlyTitleInfo = try $ do
     author <- parseAuthor
+    title <- parseTitle
     eof
-    return $ makeLatex (Just author) Nothing
+    return $ makeLatex (Just $ author ++ title) Nothing
 
 onlyBody :: Parser String
 onlyBody = try $ do
@@ -81,9 +82,8 @@ parseInlineMath = try $ do
 
 parseMathEnvironment :: Parser String
 parseMathEnvironment = try $ do
-    _ <- try $ char ' '
     _ <- try $ char '{'
-    _ <- try (char ' ') <|> try newline
+    void (try newline) <|> void (return "")
     content <- parseMathSymbols
     parseClosingCurlyBracket
     return content
@@ -103,19 +103,119 @@ parseSpecialMathSymbol = try $
     parseIntegral <|>
     parsePower <|>
     parseSubscript <|>
-    parseMathNumber
+    parseMathNumber <|>
+    parseCurvedBrackets <|>
+    parseSquareBrackets <|>
+    parseCurlyBrackets <|>
+    parseAngleBrackets <|>
+    parseAbsolute <|>
+    parseGreekMath <|>
+    parseBoldVariable
 
-parseMathNumber :: Parser String
-parseMathNumber = try $ some $ digitChar <|> char '.'
+parseBoldVariable :: Parser String
+parseBoldVariable = try $ do
+    void $ char 'b'
+    var <- parseEnglishMath <|> parseGreekMath
+    return $ "\\bm{" ++ var ++ "}"
+
+parseEnglishMath :: Parser String
+parseEnglishMath = try $ do
+    c <- oneOf letters
+    return [c]
+  where
+    letters :: String
+    letters = 
+        "abcdefghijklmnopqrstuvwxyz\
+        \ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+parseGreekMath :: Parser String
+parseGreekMath = try $ do
+    letter <- string "alpha" <|>
+              string "beta" <|>
+              string "gamma" <|>
+              string "Gamma" <|>
+              string "delta" <|>
+              string "Delta" <|>
+              string "epsilon" <|>
+              string "zeta" <|>
+              string "eta" <|>
+              string "theta" <|>
+              string "Theta" <|>
+              string "iota" <|>
+              string "lambda" <|>
+              string "Lambda" <|>
+              string "mu" <|>
+              string "nu" <|>
+              string "xi" <|>
+              string "Xi" <|>
+              string "pi" <|>
+              string "Pi" <|>
+              string "rho" <|>
+              string "sigma" <|>
+              string "Sigma" <|>
+              string "tau" <|>
+              string "upsilon" <|>
+              string "Upsilon" <|>
+              string "phi" <|>
+              string "Phi" <|>
+              string "chi" <|>
+              string "psi" <|>
+              string "Psi" <|>
+              string "omega" <|>
+              string "Omega"
+    return $ '\\':letter ++ " "
+
+parseAbsolute :: Parser String
+parseAbsolute = try $ do
+    _ <- try $ char '|'
+    _ <- try $ char '{'
+    content <- parseMathSymbols
+    _ <- try $ char '}'
+    return $ "\\left|" ++ content ++ "\\right|"
+
+parseCurvedBrackets :: Parser String
+parseCurvedBrackets = try $ do
+    _ <- try $ char '('
+    _ <- try $ char ' '
+    content <- parseMathSymbols
+    _ <- try $ char ')'
+    return $ "\\left(" ++ content ++ "\\right)"
+
+parseSquareBrackets :: Parser String
+parseSquareBrackets = try $ do
+    _ <- try $ char '['
+    content <- parseMathSymbols
+    _ <- try $ char ']'
+    return $ "\\left[" ++ content ++ "\\right]"
+
+parseCurlyBrackets :: Parser String
+parseCurlyBrackets = try $ do
+    _ <- string "curly"
+    _ <- try $ char '{'
+    content <- parseMathSymbols
+    _ <- try $ char '}'
+    return $ "\\left\\{" ++ content ++ "\\right\\}"
+
+parseAngleBrackets :: Parser String
+parseAngleBrackets = try $ do
+    _ <- try $ string "angle"
+    _ <- try $ char '{'
+    content <- parseMathSymbols
+    _ <- try $ char '}'
+    return $ "\\langle " ++ content ++ "\\rangle "
 
 parseIntegral :: Parser String
 parseIntegral = try $ do
     _ <- string "int"
     return "\\int "
 
+parseMathNumber :: Parser String
+parseMathNumber = try $ some $ digitChar <|> char '.'
+
 parsePower :: Parser String
 parsePower = try $ do
-    _ <- string "^ { "
+    _ <- try $ char '^'
+    _ <- try $ char '{'
     content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "^{" ++ content ++ "}"
@@ -123,9 +223,7 @@ parsePower = try $ do
 parseSubscript :: Parser String
 parseSubscript = try $ do
     _ <- char '_'
-    _ <- char ' '
     _ <- char '{'
-    _ <- char ' '
     content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "_{" ++ content ++ "}"
@@ -140,40 +238,21 @@ parseSingleMathChar :: Parser String
 parseSingleMathChar = try $
     fmap (: []) (try $ oneOf singleCharMathSymbols) <|>
     parsePercentage <|>
-    parseDollar
-
--- parseLeftCurvedBracket :: Parser String
--- parseLeftCurvedBracket = try $ do
---     _ <- char '('
---     return "\\left("
--- 
--- parseRightCurvedBracket :: Parser String
--- parseRightCurvedBracket = try $ do
---     _ <- char ')'
---     return "\\right)"
--- 
--- parseLeftSquareBracket :: Parser String
--- parseLeftSquareBracket = try $ do
---     _ <- char '['
---     return "\\left["
--- 
--- parseRightSquareBracket :: Parser String
--- parseRightSquareBracket = try $ do
---     _ <- char ']'
---     return "\\right]"
+    parseDollar <|>
+    parseAmpersand
 
 singleCharMathSymbols :: String
 singleCharMathSymbols =
     "abcdefghijklmnopqrstuvwxyz\
     \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-    \!£$%-=+/.><,|"
+    \|!£-=+/.><,"
 
 parseOrdinaryText :: Parser String
 parseOrdinaryText = try $ do
     void $ try $ char '`' 
     content <- parseTextQuoteContent
     void $ try $ char '`'
-    void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof)
+    void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof) <|> void (try $ lookAhead $ char '}')
     return content
 
 parseTextQuoteContent :: Parser String
@@ -189,7 +268,16 @@ parseEndQuoteNoConsume = do
     return "" 
 
 parseWord :: Parser String
-parseWord = fmap concat $ try $ some $ parseWordChar <|> parseSpecialChar
+parseWord = try $ do
+    openQuote <- parseOpenQuote
+    word <- some $ parseWordChar <|> parseSpecialChar
+    return $ openQuote ++ concat word
+
+parseOpenQuote :: Parser String
+parseOpenQuote = try $
+    (try (char '\"') >> return "``") <|>
+    (try (char '\'') >> return "`") <|>
+    return ""
 
 parseWordChar :: Parser String
 parseWordChar = (: []) <$> oneOf wordChars
@@ -277,10 +365,10 @@ parseTitle = try $ do
 
 parsePreambleField :: Parser String
 parsePreambleField = try $ do
-    _ <- try $ char ' '
     _ <- try $ char '{'
-    void (try $ char ' ') <|> void (try newline)
+    void (try newline) <|> void (return "")
     content <- parseOrdinaryText
     _ <- try $ char '}'
-    void (try $ char ' ') <|> void (try newline) <|> void (try $ lookAhead eof)
+    void (try $ char ' ') <|> void (try newline) <|>
+        void (try $ lookAhead eof)
     return content

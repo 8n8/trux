@@ -1,0 +1,4 @@
+Tuesday 2 January 2018
+
+I've written a basic parser using MegaParsec.  Each piece of it directly outputs a chunk of Latex as a string.  The problem with this is that I can't 
+
