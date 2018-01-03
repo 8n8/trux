@@ -126,7 +126,13 @@ parseSpecialMathSymbol = try $
     parseMultiplication <|>
     parseMathText <|>
     parseDivision <|>
-    parseTrig
+    parseTrig <|>
+    parseNewline
+
+parseNewline :: Parser String
+parseNewline = try $ do
+    _ <- try $ char ';'
+    return "\\\\"
 
 parseDivision :: Parser String
 parseDivision = try $ do
@@ -254,7 +260,10 @@ parseIntegral = try $ do
     return "\\int "
 
 parseMathNumber :: Parser String
-parseMathNumber = try $ some $ digitChar <|> char '.'
+parseMathNumber = try $ some $ oneOf digits
+
+digits :: String
+digits = "0123456789."
 
 parsePower :: Parser String
 parsePower = try $ do
