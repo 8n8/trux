@@ -1,9 +1,9 @@
 module Parser ( parseDocument, wordChars ) where
 
+import Control.Monad
+import Data.Void ( Void )
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import Data.Void ( Void )
-import Control.Monad
 
 type Parser = Parsec Void String
 
@@ -44,30 +44,41 @@ onlyBody = try $ do
     body <- parseBody
     return $ makeLatex Nothing (Just body)
 
+packages :: String
+packages =
+    "\\usepackage{bm}\
+    \\\usepackage{amsmath}"
+
 makeLatex :: Maybe String -> Maybe String -> String
 makeLatex Nothing Nothing = ""
 makeLatex Nothing (Just body) =
-    "\\documentclass{article}\\begin{document}" ++
+    "\\documentclass{article}\\begin{document}" ++ packages ++
         body ++ "\\end{document}"
 makeLatex (Just titleinfo) Nothing =
-    "\\documentclass{article}" ++ titleinfo ++
+    "\\documentclass{article}" ++ titleinfo ++ packages ++
         "\\begin{document}\\maketitle \\end{document}"
 makeLatex (Just titleinfo) (Just body) =
-    "\\documentclass{article}" ++ titleinfo ++
+    "\\documentclass{article}" ++ titleinfo ++ packages ++
         "\\begin{document}\\maketitle " ++ body ++ "\\end{document}"
 
 parseBody :: Parser String
 parseBody = fmap concat $ try $ do
     content <- try $ some $
-        parseOrdinaryText <|> parseDisplayMath <|> parseInlineMath
+        parseOrdinaryTextAndEnding <|> parseInlineMath <|> parseDisplayMath
     eof
+    return content
+
+parseOrdinaryTextAndEnding :: Parser String
+parseOrdinaryTextAndEnding = try $ do
+    content <- parseOrdinaryText
+    void (try newline) <|> void (try $ char ' ') <|> void (try eof)
     return content
 
 parseDisplayMath :: Parser String
 parseDisplayMath = try $ do
     _ <- string "math"
     content <- parseMathEnvironment
-    return $ "\\[" ++ content ++ "\\]"
+    return $ "\\begin{align*}" ++ content ++ "\\end{align*}"
 
 parseClosingCurlyBracket :: Parser ()
 parseClosingCurlyBracket = try $ do
@@ -95,7 +106,8 @@ parseMathSymbols = fmap concat $ try $ some $
 parseSpecialMathSymbolAndEnding :: Parser String
 parseSpecialMathSymbolAndEnding = try $ do
     symbol <- parseSpecialMathSymbol
-    void (try $ char ' ') <|> void (try newline) <|> void (try $ lookAhead $ char '}')
+    parseSpaceAndNoClosingCurly <|>
+        void (try newline) <|> void (try $ lookAhead $ char '}')
     return symbol
 
 parseSpecialMathSymbol :: Parser String
@@ -110,12 +122,43 @@ parseSpecialMathSymbol = try $
     parseAngleBrackets <|>
     parseAbsolute <|>
     parseGreekMath <|>
-    parseBoldVariable
+    parseBoldVariable <|>
+    parseMultiplication <|>
+    parseMathText <|>
+    parseDivision <|>
+    parseTrig
+
+parseDivision :: Parser String
+parseDivision = try $ do
+    _ <- string "div"
+    return "\\div "
+
+parseTrig :: Parser String
+parseTrig = try $ do
+    function <-
+        string "sinh" <|>
+        string "cosh" <|>
+        string "tanh" <|>
+        string "sin"  <|>
+        string "cos" <|>
+        string "log" <|>
+        string "ln"
+    return $ "\\" ++ function ++ " "
+
+parseMathText :: Parser String
+parseMathText = try $ do
+    text <- parseOrdinaryText
+    return $ "\\text{" ++ text ++ "}"
+
+parseMultiplication :: Parser String
+parseMultiplication = try $ do
+    _ <- char '*'
+    return "\\times "
 
 parseBoldVariable :: Parser String
 parseBoldVariable = try $ do
     void $ char 'b'
-    var <- parseEnglishMath <|> parseGreekMath
+    var <- parseGreekMath <|> parseEnglishMath
     return $ "\\bm{" ++ var ++ "}"
 
 parseEnglishMath :: Parser String
@@ -184,6 +227,7 @@ parseCurvedBrackets = try $ do
 parseSquareBrackets :: Parser String
 parseSquareBrackets = try $ do
     _ <- try $ char '['
+    _ <- try $ char ' '
     content <- parseMathSymbols
     _ <- try $ char ']'
     return $ "\\left[" ++ content ++ "\\right]"
@@ -228,10 +272,16 @@ parseSubscript = try $ do
     _ <- try $ char '}'
     return $ "_{" ++ content ++ "}"
 
+parseSpaceAndNoClosingCurly :: Parser ()
+parseSpaceAndNoClosingCurly = try $ do
+    void $ try $ char ' '
+    void $ try $ lookAhead $ notChar '}'
+
 parseMathCharAndEnding :: Parser String
 parseMathCharAndEnding = try $ do
     symbol <- parseSingleMathChar
-    _ <- try (char ' ') <|> try newline <|> try (lookAhead $ char '}') 
+    parseSpaceAndNoClosingCurly <|>
+        void (try newline) <|> void (try $ lookAhead $ char '}') 
     return symbol
     
 parseSingleMathChar :: Parser String
@@ -252,7 +302,7 @@ parseOrdinaryText = try $ do
     void $ try $ char '`' 
     content <- parseTextQuoteContent
     void $ try $ char '`'
-    void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof) <|> void (try $ lookAhead $ char '}')
+    -- void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof) <|> void (try $ lookAhead $ char '}')
     return content
 
 parseTextQuoteContent :: Parser String

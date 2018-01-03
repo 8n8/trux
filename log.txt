@@ -1,4 +1,11 @@
 Tuesday 2 January 2018
 
-I've written a basic parser using MegaParsec.  Each piece of it directly outputs a chunk of Latex as a string.  The problem with this is that I can't 
+I've written a basic parser using MegaParsec.  Each piece of it directly outputs a chunk of Latex as a string.  The problem is how to deal with internal references and citations.  Taking them separately:
 
+1) The problem with internal references:
+
+I really want to be able to pass my Latex code to pdflatex via stdio, have pdflatex do one fast run, and all is done.  This means that everything that Latex has to do several runs for needs to be handled previously by Trux.  I don't know how to do this with clickable links.
+
+***
+
+I think I'm making things too hard here.  Latexmk can handle all the runs.  I have occasionally had it not work and had to delete all the .aux files and things and start again, but I can deal with that later as it arises.  After all, the point of Trux is not to redo Latex from scratch, but to put a pretty layer on the top that makes it nice to use.  I should reuse other peoples' stuff wherever possible.
