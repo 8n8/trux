@@ -1,0 +1,37 @@
++ DONE add math multiplication symbol
++ DONE add plain text insertion for math mode
++ DONE add sin, tan, cos, sinh, cosh, tanh, log, ln
++ DONE forbid extra spaces at end of math environment
++ DONE change latexmk command to use non-stop mode
++ HOW? change latexmk command so that it only output error messages
++ HOW? improve bad math error messages
++ DONE add math division symbol
++ DONE make display math mode use align rather than \[\]
++ DONE add newline atom for display math mode
++ DONE add alignment of = in display math mode
++ look into using the BREQN package for automatic line breaking of equations
++ add option for turning of an equation number
++ add section headers
++ add umlauts
++ add plus-minus symbol to math mode
++ add hats to math variables
++ add underlines to math variables
++ add full-size option to disaply math
++ add overlines to math variables
++ add atoms for inserting whitespace in math mode
++ add atoms for inserting whitespace in normal mode
++ add page headers and footers
++ add footnotes
++ add internal cross-references
++ add external references
++ add tables
++ add image insertions
++ add fractions
++ add matrices
++ add block quotes
++ add alternative fonts
++ add short forms for maths subscripts and superscripts
++ add fractions
++ add a spell-check
++ add big-sigma sum notation
++ add set symbols
