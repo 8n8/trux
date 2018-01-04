@@ -47,7 +47,8 @@ onlyBody = try $ do
 packages :: String
 packages =
     "\\usepackage{bm}\
-    \\\usepackage{amsmath}"
+    \\\usepackage{amsmath}\
+    \\\usepackage{breqn}"
 
 makeLatex :: Maybe String -> Maybe String -> String
 makeLatex Nothing Nothing = ""
@@ -78,7 +79,7 @@ parseDisplayMath :: Parser String
 parseDisplayMath = try $ do
     _ <- string "math"
     content <- parseMathEnvironment Display
-    return $ "\\begin{align*}" ++ content ++ "\\end{align*}"
+    return $ "\\begin{dgroup*}" ++ content ++ "\\end{dgroup*}"
 
 parseClosingCurlyBracket :: Parser ()
 parseClosingCurlyBracket = try $ do
@@ -102,6 +103,11 @@ parseMathEnvironment mathType = try $ do
     return content
 
 parseMathSymbols :: MathType -> Parser String
+parseMathSymbols Display = try $ do
+    symbols <- fmap concat $ try $ some $ 
+        parseMathCharAndEnding <|>
+        parseSpecialMathSymbolAndEnding Display
+    return $ "\\begin{dmath}" ++ symbols ++ "\\end{dmath}"
 parseMathSymbols mathType = fmap concat $ try $ some $ 
     parseMathCharAndEnding <|>
     parseSpecialMathSymbolAndEnding mathType
@@ -115,13 +121,11 @@ parseSpecialMathSymbolAndEnding mathType = try $ do
 
 parseSpecialMathSymbol :: MathType -> Parser String
 parseSpecialMathSymbol Inline = try $
-    parseSpecialMathSymbolCommon <|>
-    string "="
+    parseSpecialMathSymbolCommon
 
 parseSpecialMathSymbol Display = try $
     parseSpecialMathSymbolCommon <|>
-    parseNewline <|>
-    ((string "=") >> return "&=")
+    parseNewline
 
 parseSpecialMathSymbol SubEnvironment = parseSpecialMathSymbolCommon
 
@@ -146,7 +150,7 @@ parseSpecialMathSymbolCommon = try $
 parseNewline :: Parser String
 parseNewline = try $ do
     _ <- try $ char ';'
-    return "\\\\"
+    return "\\end{dmath*}\\begin{dmath*}"
 
 parseDivision :: Parser String
 parseDivision = try $ do
@@ -318,7 +322,7 @@ singleCharMathSymbols :: String
 singleCharMathSymbols =
     "abcdefghijklmnopqrstuvwxyz\
     \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-    \|!£-+/.><,"
+    \=|!£-+/.><,"
 
 parseOrdinaryText :: Parser String
 parseOrdinaryText = try $ do

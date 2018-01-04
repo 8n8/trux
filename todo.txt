@@ -9,8 +9,8 @@
 + DONE make display math mode use align rather than \[\]
 + DONE add newline atom for display math mode
 + DONE add alignment of = in display math mode
-+ look into using the BREQN package for automatic line breaking of equations
-+ add option for turning of an equation number
++ DONE look into using the BREQN package for automatic line breaking of equations
++ add option for turning on an equation number
 + add section headers
 + add umlauts
 + add plus-minus symbol to math mode
@@ -35,3 +35,4 @@
 + add a spell-check
 + add big-sigma sum notation
 + add set symbols
++ add option for code quotes with nice syntax highlighting
