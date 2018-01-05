@@ -78,7 +78,7 @@ parseOrdinaryTextAndEnding = try $ do
     return content
 
 parseDisplayMath :: Parser String
-parseDisplayMath = try $ do
+parseDisplayMath = do
     _ <- string "math"
     content <- parseMathEnvironment
     return $ "\\begin{dgroup*}" ++ content ++ "\\end{dgroup*}"
