@@ -4,16 +4,19 @@
 + DONE forbid extra spaces at end of math environment
 + DONE change latexmk command to use non-stop mode
 + HOW? change latexmk command so that it only output error messages
-+ HOW? improve bad math error messages
 + DONE add math division symbol
 + DONE make display math mode use align rather than \[\]
 + DONE add newline atom for display math mode
 + DONE add alignment of = in display math mode
 + DONE look into using the BREQN package for automatic line breaking of equations
-+ add option for turning on an equation number
++ DONE add option for turning on an equation number
++ improve bad math error messages
++ add square root for math mode
 + add section headers
 + add umlauts
 + add plus-minus symbol to math mode
++ add line comments
++ add block comments
 + add hats to math variables
 + add underlines to math variables
 + add full-size option to disaply math

@@ -65,7 +65,9 @@ makeLatex (Just titleinfo) (Just body) =
 parseBody :: Parser String
 parseBody = fmap concat $ try $ do
     content <- try $ some $
-        parseOrdinaryTextAndEnding <|> parseInlineMath <|> parseDisplayMath
+        parseDisplayMath <|>
+        parseOrdinaryTextAndEnding <|>
+        parseInlineMath
     eof
     return content
 
@@ -78,7 +80,7 @@ parseOrdinaryTextAndEnding = try $ do
 parseDisplayMath :: Parser String
 parseDisplayMath = try $ do
     _ <- string "math"
-    content <- parseMathEnvironment Display
+    content <- parseMathEnvironment
     return $ "\\begin{dgroup*}" ++ content ++ "\\end{dgroup*}"
 
 parseClosingCurlyBracket :: Parser ()
@@ -89,45 +91,63 @@ parseClosingCurlyBracket = try $ do
 parseInlineMath :: Parser String
 parseInlineMath = try $ do
     _ <- try $ char '$'
-    content <- parseMathEnvironment Inline
+    content <- parseInlineMathEnvironment
     return $ "$" ++ content ++ "$"
 
-data MathType = Inline | Display | SubEnvironment
-
-parseMathEnvironment :: MathType -> Parser String
-parseMathEnvironment mathType = try $ do
+parseMathEnvironment :: Parser String
+parseMathEnvironment = try $ do
     _ <- try $ char '{'
-    void (try newline) <|> void (return "")
-    content <- parseMathSymbols mathType
+    void (try newline) <|> return ()
+    content <- fmap concat $ try $ some parseOneLineOfDisplayMath
     parseClosingCurlyBracket
     return content
 
-parseMathSymbols :: MathType -> Parser String
-parseMathSymbols Display = try $ do
-    symbols <- fmap concat $ try $ some $ 
-        parseMathCharAndEnding <|>
-        parseSpecialMathSymbolAndEnding Display
-    return $ "\\begin{dmath}" ++ symbols ++ "\\end{dmath}"
-parseMathSymbols mathType = fmap concat $ try $ some $ 
-    parseMathCharAndEnding <|>
-    parseSpecialMathSymbolAndEnding mathType
+parseOneLineOfDisplayMath :: Parser String
+parseOneLineOfDisplayMath = try $ do
+    content <- parseMathSymbols
+    star <- parseEquationNumber <|>  parseNoEquationNumber
+    parseSemiColonAndSpace <|> lookAhead parseClosingCurlyBracket
+    return $
+        "\\begin{dmath" ++ star ++ "}" ++ content ++
+            "\\end{dmath" ++ star ++ "}"
 
-parseSpecialMathSymbolAndEnding :: MathType -> Parser String
-parseSpecialMathSymbolAndEnding mathType = try $ do
-    symbol <- parseSpecialMathSymbol mathType
+parseNoEquationNumber :: Parser String
+parseNoEquationNumber = try $ do
+    (void $ try $ lookAhead $ char ';') <|>
+        (void $ try $ lookAhead $ char '}')
+    return "*" 
+
+parseEquationNumber :: Parser String
+parseEquationNumber = try $ do
+    _ <- string "number"
+    ((void $ try $ char ' ') >> (void $ try $ lookAhead $ char ';')) <|>
+        (void $ try $ lookAhead $ char '}')
+    return "" 
+
+parseInlineMathEnvironment :: Parser String
+parseInlineMathEnvironment = try $ do
+    _ <- try $ char '{'
+    void (try newline) <|> void (return "")
+    content <- parseMathSymbols
+    parseClosingCurlyBracket
+    return content
+
+parseSemiColonAndSpace :: Parser ()
+parseSemiColonAndSpace = try $ do
+    _ <- try $ char ';'
+    (void $ try $ char ' ') <|> (void $ try newline)
+    
+parseMathSymbols :: Parser String
+parseMathSymbols = fmap concat $ try $ some $ 
+    parseMathCharAndEnding <|>
+    parseSpecialMathSymbolAndEnding
+
+parseSpecialMathSymbolAndEnding :: Parser String
+parseSpecialMathSymbolAndEnding = try $ do
+    symbol <- parseSpecialMathSymbolCommon
     parseSpaceAndNoClosingCurly <|>
         void (try newline) <|> void (try $ lookAhead $ char '}')
     return symbol
-
-parseSpecialMathSymbol :: MathType -> Parser String
-parseSpecialMathSymbol Inline = try $
-    parseSpecialMathSymbolCommon
-
-parseSpecialMathSymbol Display = try $
-    parseSpecialMathSymbolCommon <|>
-    parseNewline
-
-parseSpecialMathSymbol SubEnvironment = parseSpecialMathSymbolCommon
 
 parseSpecialMathSymbolCommon :: Parser String
 parseSpecialMathSymbolCommon = try $
@@ -146,11 +166,6 @@ parseSpecialMathSymbolCommon = try $
     parseMathText <|>
     parseDivision <|>
     parseTrig
-
-parseNewline :: Parser String
-parseNewline = try $ do
-    _ <- try $ char ';'
-    return "\\end{dmath*}\\begin{dmath*}"
 
 parseDivision :: Parser String
 parseDivision = try $ do
@@ -236,7 +251,7 @@ parseAbsolute :: Parser String
 parseAbsolute = try $ do
     _ <- try $ char '|'
     _ <- try $ char '{'
-    content <- parseMathSymbols SubEnvironment
+    content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "\\left|" ++ content ++ "\\right|"
 
@@ -244,7 +259,7 @@ parseCurvedBrackets :: Parser String
 parseCurvedBrackets = try $ do
     _ <- try $ char '('
     _ <- try $ char ' '
-    content <- parseMathSymbols SubEnvironment
+    content <- parseMathSymbols
     _ <- try $ char ')'
     return $ "\\left(" ++ content ++ "\\right)"
 
@@ -252,7 +267,7 @@ parseSquareBrackets :: Parser String
 parseSquareBrackets = try $ do
     _ <- try $ char '['
     _ <- try $ char ' '
-    content <- parseMathSymbols SubEnvironment
+    content <- parseMathSymbols
     _ <- try $ char ']'
     return $ "\\left[" ++ content ++ "\\right]"
 
@@ -260,7 +275,7 @@ parseCurlyBrackets :: Parser String
 parseCurlyBrackets = try $ do
     _ <- string "curly"
     _ <- try $ char '{'
-    content <- parseMathSymbols SubEnvironment
+    content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "\\left\\{" ++ content ++ "\\right\\}"
 
@@ -268,7 +283,7 @@ parseAngleBrackets :: Parser String
 parseAngleBrackets = try $ do
     _ <- try $ string "angle"
     _ <- try $ char '{'
-    content <- parseMathSymbols SubEnvironment
+    content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "\\langle " ++ content ++ "\\rangle "
 
@@ -287,7 +302,7 @@ parsePower :: Parser String
 parsePower = try $ do
     _ <- try $ char '^'
     _ <- try $ char '{'
-    content <- parseMathSymbols SubEnvironment
+    content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "^{" ++ content ++ "}"
 
@@ -295,7 +310,7 @@ parseSubscript :: Parser String
 parseSubscript = try $ do
     _ <- char '_'
     _ <- char '{'
-    content <- parseMathSymbols SubEnvironment
+    content <- parseMathSymbols
     _ <- try $ char '}'
     return $ "_{" ++ content ++ "}"
 
