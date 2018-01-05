@@ -8,39 +8,38 @@ import Text.Megaparsec.Char
 type Parser = Parsec Void String
 
 parseDocument :: Parser String
-parseDocument = try $ titleAndBody <|> onlyBody <|> onlyTitleInfo
+parseDocument = titleAndBody <|> onlyBody <|> onlyTitleInfo
 
 titleAndBody :: Parser String
-titleAndBody = try $ do
+titleAndBody = do
     titleinfo <- parseTitleInfo
     body <- parseBody
     return $ makeLatex (Just titleinfo) (Just body)
 
 parseTitleInfo :: Parser String
-parseTitleInfo = try $
-    parseTitleAuthor <|> parseAuthorTitle
+parseTitleInfo = parseTitleAuthor <|> parseAuthorTitle
      
 parseTitleAuthor :: Parser String
-parseTitleAuthor = try $ do
+parseTitleAuthor = do
     title <- parseTitle
     author <- parseAuthor
     return $ title ++ author
 
 parseAuthorTitle :: Parser String
-parseAuthorTitle = try $ do
+parseAuthorTitle = do
     author <- parseAuthor
     title <- parseTitle
     return $ title ++ author
 
 onlyTitleInfo :: Parser String
-onlyTitleInfo = try $ do
+onlyTitleInfo = do
     author <- parseAuthor
     title <- parseTitle
     eof
     return $ makeLatex (Just $ author ++ title) Nothing
 
 onlyBody :: Parser String
-onlyBody = try $ do
+onlyBody = do
     body <- parseBody
     return $ makeLatex Nothing (Just body)
 
@@ -63,47 +62,88 @@ makeLatex (Just titleinfo) (Just body) =
         "\\begin{document}\\maketitle " ++ body ++ "\\end{document}"
 
 parseBody :: Parser String
-parseBody = fmap concat $ try $ do
-    content <- try $ some $
+parseBody = fmap concat $ do
+    content <- some $
         parseDisplayMath <|>
         parseOrdinaryTextAndEnding <|>
-        parseInlineMath
+        parseInlineMath <|>
+        parseHeader1 <|>
+        parseHeader2 <|>
+        parseHeader3
     eof
     return content
 
+parseHeader3 :: Parser String
+parseHeader3 = do
+    star <- (string "header3num" >> return "") <|>
+        (string "header3" >> return "*")
+    _ <- try $ char '{'
+    content <- fmap concat $ some $
+        parseOrdinaryTextAndEnding <|> parseInlineMath
+    parseClosingCurlyBracket
+    return $ "\\subsubsection" ++ star ++ "{" ++ content ++ "}"
+
+parseHeader2 :: Parser String
+parseHeader2 = do
+    star <- (string "header2num" >> return "") <|>
+        (string "header2" >> return "*")
+    _ <- try $ char '{'
+    content <- fmap concat $ some $
+        parseOrdinaryTextAndEnding <|> parseInlineMath
+    parseClosingCurlyBracket
+    return $ "\\subsection" ++ star ++ "{" ++ content ++ "}"
+
+parseHeader1 :: Parser String
+parseHeader1 = do
+    star <- (string "header1num" >> return "") <|>
+        (string "header1" >> return "*")
+    _ <- try $ char '{'
+    content <- fmap concat $ some $
+        parseOrdinaryTextAndEnding <|> parseInlineMath
+    parseClosingCurlyBracket
+    return $ "\\section" ++ star ++ "{" ++ content ++ "}"
+
 parseOrdinaryTextAndEnding :: Parser String
-parseOrdinaryTextAndEnding = try $ do
+parseOrdinaryTextAndEnding = do
     content <- parseOrdinaryText
-    void (try newline) <|> void (try $ char ' ') <|> void (try eof)
+    parseNewlineSpaceCloseCurlyOrEof
     return content
+
+parseNewlineSpaceCloseCurlyOrEof :: Parser ()
+parseNewlineSpaceCloseCurlyOrEof =
+    void (try newline) <|>
+    void (try $ char ' ') <|>
+    void (try eof) <|>
+    void (try $ lookAhead $ char '}')
 
 parseDisplayMath :: Parser String
 parseDisplayMath = do
     _ <- string "math"
-    content <- parseMathEnvironment
+    _ <- try $ char '{'
+    void (try newline) <|> return ()
+    content <- fmap concat $ try $ some parseOneLineOfDisplayMath
+    parseClosingCurlyBracket
     return $ "\\begin{dgroup*}" ++ content ++ "\\end{dgroup*}"
 
 parseClosingCurlyBracket :: Parser ()
 parseClosingCurlyBracket = try $ do
     _ <- try $ char '}'
-    try $ void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof)
+    try $ (void (try $ char ' ') >>
+            void (try $ lookAhead $ notChar '}'))  <|>
+        void (try newline) <|> try (lookAhead eof) <|>
+        void (try $ lookAhead $ char '}')
 
 parseInlineMath :: Parser String
-parseInlineMath = try $ do
+parseInlineMath = do
     _ <- try $ char '$'
-    content <- parseInlineMathEnvironment
+    _ <- try $ char '{'
+    void (try newline) <|> void (return "")
+    content <- parseMathSymbols
+    parseClosingCurlyBracket
     return $ "$" ++ content ++ "$"
 
-parseMathEnvironment :: Parser String
-parseMathEnvironment = try $ do
-    _ <- try $ char '{'
-    void (try newline) <|> return ()
-    content <- fmap concat $ try $ some parseOneLineOfDisplayMath
-    parseClosingCurlyBracket
-    return content
-
 parseOneLineOfDisplayMath :: Parser String
-parseOneLineOfDisplayMath = try $ do
+parseOneLineOfDisplayMath = do
     content <- parseMathSymbols
     star <- parseEquationNumber <|>  parseNoEquationNumber
     parseSemiColonAndSpace <|> lookAhead parseClosingCurlyBracket
@@ -119,18 +159,10 @@ parseNoEquationNumber = try $ do
 
 parseEquationNumber :: Parser String
 parseEquationNumber = try $ do
-    _ <- string "number"
+    _ <- string "num"
     ((void $ try $ char ' ') >> (void $ try $ lookAhead $ char ';')) <|>
         (void $ try $ lookAhead $ char '}')
     return "" 
-
-parseInlineMathEnvironment :: Parser String
-parseInlineMathEnvironment = try $ do
-    _ <- try $ char '{'
-    void (try newline) <|> void (return "")
-    content <- parseMathSymbols
-    parseClosingCurlyBracket
-    return content
 
 parseSemiColonAndSpace :: Parser ()
 parseSemiColonAndSpace = try $ do
@@ -138,7 +170,7 @@ parseSemiColonAndSpace = try $ do
     (void $ try $ char ' ') <|> (void $ try newline)
     
 parseMathSymbols :: Parser String
-parseMathSymbols = fmap concat $ try $ some $ 
+parseMathSymbols = fmap concat $ some $ 
     parseMathCharAndEnding <|>
     parseSpecialMathSymbolAndEnding
 
@@ -154,6 +186,7 @@ parseSpecialMathSymbolCommon = try $
     parseIntegral <|>
     parsePower <|>
     parseSubscript <|>
+    parseSquareRoot <|>
     parseMathNumber <|>
     parseCurvedBrackets <|>
     parseSquareBrackets <|>
@@ -181,6 +214,7 @@ parseTrig = try $ do
         string "sin"  <|>
         string "cos" <|>
         string "log" <|>
+        string "exp" <|>
         string "ln"
     return $ "\\" ++ function ++ " "
 
@@ -306,6 +340,14 @@ parsePower = try $ do
     _ <- try $ char '}'
     return $ "^{" ++ content ++ "}"
 
+parseSquareRoot :: Parser String
+parseSquareRoot = try $ do
+    _ <- string "sqrt"
+    _ <- try $ char '{'
+    content <- parseMathSymbols
+    _ <- try $ char '}'
+    return $ "\\sqrt{" ++ content ++ "}"
+
 parseSubscript :: Parser String
 parseSubscript = try $ do
     _ <- char '_'
@@ -344,7 +386,6 @@ parseOrdinaryText = try $ do
     void $ try $ char '`' 
     content <- parseTextQuoteContent
     void $ try $ char '`'
-    -- void (try $ char ' ') <|> void (try newline) <|> try (lookAhead eof) <|> void (try $ lookAhead $ char '}')
     return content
 
 parseTextQuoteContent :: Parser String

@@ -10,9 +10,12 @@
 + DONE add alignment of = in display math mode
 + DONE look into using the BREQN package for automatic line breaking of equations
 + DONE add option for turning on an equation number
-+ improve bad math error messages
-+ add square root for math mode
-+ add section headers
++ DONE improve bad math error messages
++ DONE add exp to math mode
++ DONE add square root for math mode
++ DONE add section headers
++ add indentation of the source code
++ add bold math environment
 + add umlauts
 + add plus-minus symbol to math mode
 + add line comments

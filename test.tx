@@ -1,17 +1,21 @@
 author{`True Ghiassi`}
 title{`Kalman filter`}
-`alman filtering, "also" known a' $34.40 linear Smith & Co. quadratic 'estimation' (LQE), is an algorithm ` ${y = 2} ` that use's a series of measurements observed over time, containing statistical noise and other inaccuracies, and produces estimates`
+`alman filtering, "also" ` ${x ^{2}} ` known a' $34.40 linear Smith & Co. quadratic 'estimation' (LQE), is an algorithm ` ${y = 2} ` that use's a series of measurements observed over time, containing statistical noise and other inaccuracies, and produces estimates ` ${3 y + exp ( 42 x ^{2} )}
+math{sqrt{32} num}
+math{x x = 2 num ; y = 1}
+math{( bx z ^{2} ) ( y ) num}
+math{curly{x} log x ln y num}
 math{
-x = 2 number ;
-y = 1 number}
-math{( bx z ^{2} ) ( y ) number}
-math{curly{x} log x ln y number}
+( x ) div [ y ] num}
+header1num{`Jennings ` ${x ^{2}}}
+header2{${3 y y} `Spanish text`}
+header2num{${3 y y} `Spanish text`}
+header3num{`Darbishire`}
+header3{`Darbishire`}
 math{
-( x ) div [ y ] number}
-math{
-cos cosh sinh sin number}
+cos ( 2 x + 3 y + 4 z ^{2} ) cosh sinh sin num}
 math{
 x ^{2} + 233.333 = 333 - ba bb bc bd be 0.2 f bg + ;
 322 * 1 + bb bSigma = epsilon ;
 e = m [ c ^{( 2 )} ] ;
-`pp` `p` `potato` x = x sinh a < 23 number}
+`pp` `p` `potato` x = x sinh a < 23 num}
