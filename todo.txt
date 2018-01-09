@@ -42,3 +42,6 @@
 + add big-sigma sum notation
 + add set symbols
 + add option for code quotes with nice syntax highlighting
++ add italic text to ordinary mode
++ add bold text to ordinary mode
++ change list delimeters from {} to []
