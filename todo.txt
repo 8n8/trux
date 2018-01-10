@@ -1,28 +1,41 @@
 + DONE add math multiplication symbol
-+ DONE add plain text insertion for math mode
-+ DONE add sin, tan, cos, sinh, cosh, tanh, log, ln
-+ DONE forbid extra spaces at end of math environment
-+ DONE change latexmk command to use non-stop mode
-+ HOW? change latexmk command so that it only output error messages
-+ DONE add math division symbol
-+ DONE make display math mode use align rather than \[\]
-+ DONE add newline atom for display math mode
-+ DONE add alignment of = in display math mode
-+ DONE look into using the BREQN package for automatic line breaking of equations
-+ DONE add option for turning on an equation number
-+ DONE improve bad math error messages
-+ DONE add exp to math mode
-+ DONE add square root for math mode
-+ DONE add section headers
-+ add indentation of the source code
-+ add bold math environment
++ DONE add nice dx for integrals
++ DONE add partial derivatives
++ DONE add ordinary derivatives
++ DONE fix problem of 1's appearing in first-order ordinary and partial derivatives
++ DONE add short forms for maths subscripts and superscripts
++ DONE add <= and >=
++ DONE add approximately equal to sign
++ add 'for' notation, as in x = y  for x in R
++ add number set symbols, like R, Z, N etc
++ add in sign (for sets)
++ add plain text insertion for math mode
++ add sin, tan, cos, sinh, cosh, tanh, log, ln
++ forbid extra spaces at end of math environment
++ change latexmk command to use non-stop mode
++ change latexmk command so that it only output error messages
++ add math division symbol
++ make display math mode use align rather than \[\]
++ add newline atom for display math mode
++ add alignment of = in display math mode
++ look into using the BREQN package for automatic line breaking of equations
++ add option for turning on an equation number
 + add umlauts
 + add plus-minus symbol to math mode
++ add paragraph breaks
++ break up Parser.hs into several modules: perhaps a maths module and a 2latex module would be good?
 + add line comments
 + add block comments
 + add hats to math variables
 + add underlines to math variables
++ add underline to ordinary mode
++ add mod to math mode
++ add max and min to math mode
 + add full-size option to disaply math
++ use cfrac rather than frac
++ use cleveref to automatically fill in the "Section" or "equation" in references
++ use siunitx to align table figures at the decimal point - see https://tex.stackexchange.com/questions/2746/aligning-numbers-by-decimal-points-in-table-columns/2747#2747
++ add an easy way of drawing pretty graphs
 + add overlines to math variables
 + add atoms for inserting whitespace in math mode
 + add atoms for inserting whitespace in normal mode
@@ -36,7 +49,14 @@
 + add matrices
 + add block quotes
 + add alternative fonts
-+ add short forms for maths subscripts and superscripts
+\usepackage{mathptmx}  % for Times
+\usepackage[scaled=.90]{helvet} % for Helvet
+\usepackage{courier} % for Courier
++ automatically work out the right sort of hyphens
++ add binomial notation 
++ add symbol for ...
++ add symbol for ***
++ add automatic small caps for abbreviations, like SQL or BBC
 + add fractions
 + add a spell-check
 + add big-sigma sum notation
@@ -45,3 +65,14 @@
 + add italic text to ordinary mode
 + add bold text to ordinary mode
 + change list delimeters from {} to []
++ add grammar check
++ add hyperlink input
++ add table of contents
++ try to fix problem of brackets being too big for smaller math elements
++ add dot notation for time derivatives
++ think about making generic parse and 2latex functions for the main types, using typeclasses
++ add forward-slash symbol to math mode
++ make fractions not require brackets when there is only a single item in them
++ add single bracket symbols in their various sizes
++ add nice si units to math mode
++ add hyperref to preamble

@@ -1,8 +1,8 @@
 module Main where
 
 import System.Environment ( getArgs )
--- import System.Process ( callProcess )
-import Parser ( parseDocument )
+import System.Process ( callProcess )
+import Parser ( parse2Latex )
 import Text.Megaparsec ( parse, parseErrorPretty )
 
 main :: IO ()
@@ -10,11 +10,11 @@ main = do
   filepath <- fmap head getArgs
   filecontents <- readFile filepath
   let texfile = (striptx filepath) ++ ".tex"
-  case parse parseDocument filepath filecontents of
+  case parse parse2Latex filepath filecontents of
       Left err -> putStrLn (parseErrorPretty err)
       Right latex -> do
-          writeFile texfile (show latex)
-          -- _ <- callProcess "latexmk" ["-pdf", "-interaction=nonstopmode", texfile]
+          writeFile texfile latex
+          _ <- callProcess "latexmk" ["-pdf", "-interaction=nonstopmode", texfile]
           return ()
 
 striptx :: String -> String

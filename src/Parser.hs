@@ -1,4 +1,4 @@
-module Parser ( parseDocument, Document (..) ) where
+module Parser ( parse2Latex ) where
 
 import Control.Monad
 import Data.Void ( Void )
@@ -13,14 +13,97 @@ bracket1 = '{'
 bracket2 :: Char
 bracket2 = '}'
 
+preamble :: String
+preamble =
+    "\\documentclass{article}\n\
+    \\\usepackage[utf8]{inputenc}\n\
+    \\\usepackage{amsmath}\n\
+    \\\usepackage{bm}\n\
+    \\\usepackage{textcomp}\n\
+    \\\usepackage{commath}\n\
+    \\\usepackage{breqn}\n"
+
+parse2Latex :: Parser String
+parse2Latex = fmap doc2latex parseDocument
+
 doc2latex :: Document -> String
 doc2latex (Document header body) =
-    unlines [preamble, header2latex header, body2latex header body]
+    unlines [preamble, docHeader2latex header, body2latex header body]
 
-header2latex :: (Maybe DocHeader) -> String
-header2latex Nothing = ""
-header2latex (Just (DocHeader title author date)) =
-    unlines [title2latex, author2latex, date2latex]
+body2latex :: Maybe DocHeader -> DocumentBody -> String
+body2latex header (DocumentBody elements) =
+    unlines ["\\begin{document}", maketitle, body, "\\end{document}"]
+  where
+    body :: String
+    body = concatMap element2latex elements
+    maketitle :: String
+    maketitle =case header of
+        Just _ -> "\\maketitle "
+        Nothing -> ""
+
+element2latex :: Element -> String
+element2latex element = case element of
+    Text text -> text
+    DisplayMath equations -> displayMath2latex equations
+    InlineMath contents -> inlineMath2latex contents
+    Header numbered level elements -> header2latex numbered level elements 
+    CrossReference (Id idCode) -> concat [ "\\ref{", idCode, "}" ]
+
+header2latex :: Numbered -> HeaderLevel -> [HeaderElement] -> String
+header2latex numbered level elements = concat
+    [ "\\"
+    , case level of
+        HeaderOne -> "section"
+        HeaderTwo -> "subsection"
+        HeaderThree -> "subsubsection"
+    , case numbered of
+        NumberOn _ -> ""
+        NumberOff -> "*"
+    , "{"
+    , headerElements2Latex elements
+    , "}"
+    , case numbered of
+        NumberOn (Id idCode) -> concat [ "\\label{", idCode, "}" ]
+        NumberOff -> ""
+    ]
+
+inlineMath2latex :: [MathElement] -> String
+inlineMath2latex elements =
+    concat [ "$", concatMap mathElement2Latex elements, "$" ]
+
+displayMath2latex :: [DisplayMathLine] -> String
+displayMath2latex equations = concat
+    [ "\\begin{dgroup*}"
+    , concatMap equation2latex equations
+    , "\\end{dgroup*}" ]
+
+equation2latex :: DisplayMathLine -> String
+equation2latex (DisplayMathLine numbered elements) = case numbered of
+    NumberOn (Id idCode) -> concat
+        [ "\\begin{dmath}"
+        , mathContents
+        , "\\label{"
+        , idCode
+        , "}"
+        , "\\end{dmath}" ]
+    NumberOff -> concat
+        [ "\\begin{dmath*}"
+        , mathContents
+        , "\\end{dmath*}" ]
+  where
+    mathContents = concatMap mathElement2Latex elements
+    
+docHeader2latex :: Maybe DocHeader -> String
+docHeader2latex Nothing = ""
+docHeader2latex (Just (DocHeader title author date)) =
+    unlines [title2latex title, author2latex author, date2latex date]
+
+author2latex :: Maybe Author -> String
+author2latex (Just (Author headerElements)) = concat
+    [ "\\author{"
+    , headerElements2Latex headerElements
+    , "}" ]
+author2latex Nothing = ""
 
 title2latex :: Title -> String
 title2latex (Title headerElements) = concat
@@ -28,13 +111,96 @@ title2latex (Title headerElements) = concat
     , headerElements2Latex headerElements
     , "}" ]
 
+date2latex :: Maybe Date -> String
+date2latex (Just (Date headerElements)) = concat
+    [ "\\date{"
+    , headerElements2Latex headerElements
+    , "}" ]
+date2latex Nothing = ""
+
 headerElements2Latex :: [HeaderElement] -> String
-headerElements2Latex = (fmap headerElement2Latex)
+headerElements2Latex = concatMap headerElement2Latex
 
 headerElement2Latex :: HeaderElement -> String
 headerElement2Latex (HeaderMath mathElements) =
-    mathElements2Latex mathElements
-headerElements2Latex (HeaderText text) =
+    concat [ "$", math2Latex mathElements, "$" ]
+headerElement2Latex (HeaderText text) = text
+
+math2Latex :: [MathElement] -> String
+math2Latex = concatMap mathElement2Latex
+
+mathElement2Latex :: MathElement -> String
+mathElement2Latex mathElement = case mathElement of
+    MathOrdinaryText text -> concat ["\\textrm{", text, "}"] 
+    MathEnglishVar BoldMath var -> concat ["\\bm{", [var], "}"]
+    MathEnglishVar ItalicMath var -> [var]
+    MathOperatorChar operator -> [operator]
+    MathNumbers numbers -> numbers
+    GreekMath BoldMath greek -> concat ["\\bm{\\", greek, "}"]
+    GreekMath ItalicMath greek -> "\\" ++ greek
+    Sqrt contents -> concat ["\\sqrt{", math2Latex contents, "}"]
+    Power contents -> concat ["^{", math2Latex contents, "}"]
+    Fraction numerator denominator -> concat
+        [ "\\dfrac{"
+        , math2Latex numerator
+        , "}{"
+        , math2Latex denominator
+        , "}" ]
+    Subscript contents -> concat ["_{", math2Latex contents, "}"]
+    CurlyBracket contents ->
+        concat ["\\left\\{", math2Latex contents, "\\right\\}"]
+    CurvedBracket contents ->
+        concat ["\\left(", math2Latex contents, "\\right)"]
+    SquareBracket contents ->
+        concat ["\\left[", math2Latex contents, "\\right]"]
+    SpecialMathSymbol symbol -> concat ["\\", symbol, " "]
+    AbsoluteBracket contents ->
+        concat ["\\left|", math2Latex contents, "\\right|"]
+    Multiplication -> "\\times "
+    Star -> "*"
+    Integral contents wrt -> concat
+        [ "\\int "
+        , math2Latex contents
+        , "\\dif "
+        , mathElement2Latex wrt ]
+    Differential -> "\\dif "
+    OrdinaryDerivative ofvar wrt degree -> concat
+        [ "\\dod"
+        , derivDegree2Latex degree
+        , "{"
+        , mathElement2Latex ofvar
+        , "}{"
+        , mathElement2Latex wrt
+        , "}" ]
+    PartialDerivative ofvar wrt degree -> concat
+        [ "\\dpd"
+        , derivDegree2Latex degree
+        , "{"
+        , mathElement2Latex ofvar
+        , "}{"
+        , mathElement2Latex wrt
+        , "}" ]
+    MixedPartialDerivative wrt1 degree1 wrt2 degree2 wrt3 degree3 -> concat
+        [ "\\dmd{"
+        , mathElement2Latex wrt1
+        , "}{"
+        , [degree1]
+        , "}{"
+        , mathElement2Latex wrt2
+        , "}{"
+        , [degree2]
+        , "}{"
+        , mathElement2Latex wrt3
+        , "}{"
+        , [degree3]
+        , "}" ]
+    LessThanOrEqualTo -> "\\leq "
+    MoreThanOrEqualTo -> "\\geq "
+    ApproximatelyEqualTo -> "\\simeq "
+
+derivDegree2Latex :: Char -> String
+derivDegree2Latex '1' = ""
+derivDegree2Latex degree = [ '[', degree, ']' ]
 
 data Document = Document (Maybe DocHeader) DocumentBody deriving Show
 
@@ -120,19 +286,13 @@ parseHeaderLevel =
     parseHeader1Level <|> parseHeader2Level <|> parseHeader3Level
 
 parseHeader1Level :: Parser HeaderLevel
-parseHeader1Level = do
-    _ <- parseFuncName "1"
-    return HeaderOne
+parseHeader1Level = parseFuncName "1" >> return HeaderOne
  
 parseHeader2Level :: Parser HeaderLevel
-parseHeader2Level = do
-    _ <- parseFuncName "2"
-    return HeaderTwo
+parseHeader2Level = parseFuncName "2" >> return HeaderTwo
 
 parseHeader3Level :: Parser HeaderLevel
-parseHeader3Level = do
-    _ <- parseFuncName "3"
-    return HeaderThree
+parseHeader3Level = parseFuncName "3" >> return HeaderThree
 
 data HeaderElement =
     HeaderMath [MathElement] | HeaderText String
@@ -150,14 +310,10 @@ parseHeaderElement :: Parser HeaderElement
 parseHeaderElement = parseMathInHeader <|> parseTextInHeader        
 
 parseTextInHeader :: Parser HeaderElement
-parseTextInHeader = do
-    content <- parseTextContent
-    return $ HeaderText content
+parseTextInHeader = fmap HeaderText parseTextContent
 
 parseMathInHeader :: Parser HeaderElement
-parseMathInHeader = do
-    content <- parseInlineMathContent
-    return $ HeaderMath content
+parseMathInHeader = fmap HeaderMath parseInlineMathContent
 
 parseInlineMathContent :: Parser [MathElement]
 parseInlineMathContent = do
@@ -165,13 +321,9 @@ parseInlineMathContent = do
     parseList '{' '}' parseMathElement
 
 parseInlineMath :: Parser Element
-parseInlineMath = do
-    content <- parseInlineMathContent
-    return $ InlineMath content
+parseInlineMath = fmap InlineMath parseInlineMathContent
 
-data DisplayMathLine =
-    DisplayMathLine Numbered [MathElement]
-    deriving Show
+data DisplayMathLine = DisplayMathLine Numbered [MathElement] deriving Show
 
 data Numbered = NumberOn Id | NumberOff deriving Show
 
@@ -191,10 +343,31 @@ data MathElement =
     CurvedBracket [MathElement] |
     SquareBracket [MathElement] |
     SpecialMathSymbol String |
-    AbsoluteBracket [MathElement]
+    AbsoluteBracket [MathElement] |
+    Multiplication |
+    Star |
+    Integral [MathElement] MathElement |
+    Differential |
+    PartialDerivative MathElement MathElement Char |
+    OrdinaryDerivative MathElement MathElement Char |
+    MixedPartialDerivative
+        MathElement Char MathElement Char MathElement Char |
+    LessThanOrEqualTo |
+    MoreThanOrEqualTo |
+    ApproximatelyEqualTo
     deriving Show
 
 data MathStyle = BoldMath | ItalicMath deriving Show
+
+parseDifferential :: Parser MathElement
+parseDifferential = parseFuncName "dif" >> return Differential 
+
+parseIntegral :: Parser MathElement
+parseIntegral = do
+    _ <- parseFuncName "int"
+    content <- parseList '{' '}' parseMathElement
+    wrt <- parseMathElement
+    return $ Integral content wrt
 
 parseWhiteSpace :: Parser ()
 parseWhiteSpace = void (try $ char ' ') <|> void (try newline)
@@ -203,18 +376,13 @@ parseList :: (Show c) => Char -> Char -> Parser c -> Parser [c]
 parseList startChar stopChar parseItem = do
     _ <- try $ char startChar
     parseWhiteSpace
-    content <- try $ some $ do
-        element <- parseItem
-        return element
+    content <- try $ some parseItem
     _ <- try $ char stopChar
     parseWhiteSpace
     return content
 
 parseFuncName :: String -> Parser String
-parseFuncName name = try $ do
-    _ <- string name
-    parseWhiteSpace
-    return name 
+parseFuncName name = try $ string name >> parseWhiteSpace >> return name
 
 parseDisplayMath :: Parser Element
 parseDisplayMath = do
@@ -230,41 +398,58 @@ parseDisplayMathLine = do
     return $ DisplayMathLine numbered content
 
 parseMathElement :: Parser MathElement
-parseMathElement =
-    parseMathOrdinaryText <|>
-    parseMathEnglishVar <|>
-    parseMathOperatorChar <|>
-    parseMathNumbers <|>
-    parseGreekMath <|>
-    parseSqrt <|>
-    parsePower <|>
-    parseFraction <|>
-    parseSubScript <|>
-    parseCurlyBracket <|>
-    parseCurvedBracket <|>
-    parseSquareBracket <|>
-    parseSpecialMathSymbol <|>
-    parseAbsolute
+parseMathElement = try $ choice
+    [ parseMathOrdinaryText
+    , parseMathOperatorChar
+    , parseMathEnglishVar
+    , parseMathNumbers
+    , parseGreekMath
+    , parseSqrt
+    , parsePower
+    , parseFraction
+    , parseSubscript
+    , parseCurlyBracket
+    , parseCurvedBracket
+    , parseSquareBracket
+    , parseSpecialMathSymbol
+    , parseAbsolute
+    , parseMultiplication
+    , parseStar
+    , parseOrdinaryDerivative
+    , parsePartialDerivative
+    , parseMixedPartialDerivative
+    , parseIntegral
+    , parseDifferential
+    , parseLessThanOrEqualTo
+    , parseMoreThanOrEqualTo
+    , parseApproximatelyEqualTo ]
 
+parseApproximatelyEqualTo :: Parser MathElement
+parseApproximatelyEqualTo =
+    parseFuncName "~=" >> return ApproximatelyEqualTo
+
+parseLessThanOrEqualTo :: Parser MathElement
+parseLessThanOrEqualTo = parseFuncName "<=" >> return LessThanOrEqualTo
+
+parseMoreThanOrEqualTo :: Parser MathElement
+parseMoreThanOrEqualTo = parseFuncName ">=" >> return MoreThanOrEqualTo
+
+parseMultiplication :: Parser MathElement
+parseMultiplication = parseFuncName "*" >> return Multiplication
 
 parseSpecialMathSymbol :: Parser MathElement
-parseSpecialMathSymbol = do
-    symbol <- choice $ fmap parseFuncName specialMathSymbols
-    return $ SpecialMathSymbol symbol
+parseSpecialMathSymbol =
+    SpecialMathSymbol <$> choice (parseFuncName <$> specialMathSymbols)
 
 specialMathSymbols :: [String]
 specialMathSymbols = [
     "exp", "log", "ln", "sin", "cos", "tan", "sinh", "cosh", "tanh", "div"]
 
 parseSquareBracket :: Parser MathElement
-parseSquareBracket = do
-    content <- parseList '[' ']' parseMathElement
-    return $ SquareBracket content
+parseSquareBracket = SquareBracket <$> parseList '[' ']' parseMathElement
 
 parseCurvedBracket :: Parser MathElement
-parseCurvedBracket = do
-    content <- parseList '(' ')' parseMathElement
-    return $ CurvedBracket content
+parseCurvedBracket = CurvedBracket <$> parseList '(' ')' parseMathElement
 
 parseCurlyBracket :: Parser MathElement
 parseCurlyBracket = do
@@ -279,22 +464,80 @@ parseFraction = do
     denominator <- parseList '{' '}' parseMathElement
     return $ Fraction numerator denominator
 
-parseSubScript :: Parser MathElement
-parseSubScript = do
+parseSubscript :: Parser MathElement
+parseSubscript = parseShortSubscript <|> parseLongSubscript
+
+parseShortSubscript :: Parser MathElement
+parseShortSubscript = try $ do
+    _ <- try $ char '_'
+    element <- parseMathElement
+    return $ Subscript [element]
+
+parseLongSubscript :: Parser MathElement
+parseLongSubscript = do
     _ <- parseFuncName "_"
     content <- parseList '{' '}' parseMathElement
-    return $ Subscript content
+    case content of
+        [_] -> fail "For subscripts containing only one element, use \
+            \_element notation, such as x _3."
+        _ -> return $ Subscript content
 
 parsePower :: Parser MathElement
-parsePower = do
+parsePower = parseShortPower <|> parseLongPower
+
+parseShortPower :: Parser MathElement
+parseShortPower = try $ do
+    _ <- try $ char '^'
+    element <- parseMathElement
+    return $ Power [element]
+
+parseLongPower :: Parser MathElement
+parseLongPower = do
     _ <- parseFuncName "^"
     content <- parseList '{' '}' parseMathElement
-    return $ Power content
+    case content of
+        [_] -> fail "For powers containing only one element, use ^element \
+            \notation, such as e ^x."
+        _ -> return $ Power content
+
+parseDerivativeContents :: Parser (MathElement, MathElement, Char)
+parseDerivativeContents = do
+    ofvar <- parseGreekMath <|> parseMathEnglishVar
+    wrt <- parseGreekMath <|> parseMathEnglishVar
+    degree <- parseSingleDigit
+    return (ofvar, wrt, degree)
+
+parsePartialDerivative :: Parser MathElement
+parsePartialDerivative = do
+    _ <- parseFuncName "pd"
+    (ofvar, wrt, degree) <- parseDerivativeContents
+    return $ PartialDerivative ofvar wrt degree
+
+parseOrdinaryDerivative :: Parser MathElement
+parseOrdinaryDerivative = do
+    _ <- parseFuncName "od"
+    (ofvar, wrt, degree) <- parseDerivativeContents
+    return $ OrdinaryDerivative ofvar wrt degree
+
+parseMixedPartialDerivative :: Parser MathElement
+parseMixedPartialDerivative = do
+    _ <- parseFuncName "pdMix"
+    wrt1 <- parseGreekMath <|> parseMathEnglishVar
+    degree1 <- parseSingleDigit
+    wrt2 <- parseGreekMath <|> parseMathEnglishVar
+    degree2 <- parseSingleDigit
+    wrt3 <- parseGreekMath <|> parseMathEnglishVar
+    degree3 <- parseSingleDigit
+    return $ MixedPartialDerivative wrt1 degree1 wrt2 degree2 wrt3 degree3
+
+parseSingleDigit :: Parser Char
+parseSingleDigit = do
+    d <- try digitChar
+    _ <- parseWhiteSpace
+    return d
 
 parseAbsolute :: Parser MathElement
-parseAbsolute = do
-    content <- parseList '|' '|' parseMathElement
-    return $ AbsoluteBracket content
+parseAbsolute = AbsoluteBracket <$> parseList '|' '|' parseMathElement
 
 parseSqrt :: Parser MathElement
 parseSqrt = do
@@ -307,7 +550,7 @@ parseGreekMath = parseBoldGreekMath <|> parseItalicGreekMath
 
 parseBoldGreekMath :: Parser MathElement
 parseBoldGreekMath = try $ do
-    _ <- try $ char 'b'
+    _ <- try $ char '#'
     greekCharString <- parseGreekCharString
     return $ GreekMath BoldMath greekCharString
 
@@ -338,8 +581,11 @@ parseMathOperatorChar = do
     character <- choice $ fmap parseCharFunc mathOperatorChars
     return $ MathOperatorChar character
 
+parseStar :: Parser MathElement
+parseStar = parseFuncName "star" >> return Star
+
 mathOperatorChars :: String
-mathOperatorChars = "!=%*-+\'<>.,;:@\"/"
+mathOperatorChars = "!=%-+\'<>.,;:@\"/"
 
 parseMathEnglishVar :: Parser MathElement
 parseMathEnglishVar = parseMathItalicChar <|> parseMathBoldChar
@@ -351,7 +597,7 @@ parseMathItalicChar = try $ do
 
 parseMathBoldChar :: Parser MathElement
 parseMathBoldChar = try $ do
-    _ <- try $ char 'b'
+    _ <- try $ char '#'
     character <- parseMathEnglishChar
     return $ MathEnglishVar BoldMath character
 
@@ -359,15 +605,13 @@ parseMathEnglishChar :: Parser Char
 parseMathEnglishChar = try $ choice $ fmap parseCharFunc ordinaryMathChars
 
 parseCharFunc :: Char -> Parser Char
-parseCharFunc character = do
+parseCharFunc character = try $ do
     _ <- try $ char character
     parseWhiteSpace
     return character
      
 parseMathOrdinaryText :: Parser MathElement
-parseMathOrdinaryText = do
-    text <- parseTextContent
-    return $ MathOrdinaryText text
+parseMathOrdinaryText = fmap MathOrdinaryText parseTextContent
 
 ordinaryMathChars :: String
 ordinaryMathChars =
@@ -378,10 +622,7 @@ parseNumbered :: Parser Numbered
 parseNumbered = parseNumberOn <|> return NumberOff
 
 parseNumberOn :: Parser Numbered
-parseNumberOn = do
-    _ <- parseFuncName "num"
-    idCode <- parseId
-    return $ NumberOn idCode
+parseNumberOn = parseFuncName "num" >> fmap NumberOn parseId
 
 parseId :: Parser Id
 parseId = do
@@ -400,13 +641,13 @@ parseText = fmap Text parseTextContent
 
 parseTextContent :: Parser String
 parseTextContent = try $ do
-    void $ try $ char '`' 
+    _ <- try $ char '`' 
     beginningWhitespace <- string " " <|> return ""
     mainContent <- fmap concat $ try $ some $ do
         word <- parseWord
         whiteSpace <- string " " <|> return ""
         return $ word ++ whiteSpace
-    void $ try $ char '`'
+    _ <- try $ char '`'
     parseWhiteSpace
     return $ beginningWhitespace ++ mainContent
 
@@ -433,41 +674,28 @@ wordChars =
     \!\"£*()-+=[];:'@#,<.>/?|"
 
 parseSpecialChar :: Parser String
-parseSpecialChar = try $
-    parseDollar <|>
-    parsePercentage <|>
-    parseUnderscore <|>
-    parseTilde <|>
-    parseBackslash <|>
-    parseAmpersand
+parseSpecialChar = try $ choice
+    [ parseDollar
+    , parsePercentage
+    , parseUnderscore
+    , parseTilde
+    , parseBackslash
+    , parseAmpersand ]
 
 parseAmpersand :: Parser String
-parseAmpersand = try $ do
-    _ <- char '&'
-    return "\\&"
+parseAmpersand = try (char '&') >> return "\\&"
 
 parseDollar :: Parser String
-parseDollar = try $ do
-    _ <- char '$'
-    return "\\$"
+parseDollar = try (char '$') >> return "\\$"
 
 parsePercentage :: Parser String
-parsePercentage = try $ do
-    _ <- char '%'
-    return "\\%"
+parsePercentage = try (char '%') >> return "\\%"
 
 parseUnderscore :: Parser String
-parseUnderscore = try $ do
-    _ <- char '_'
-    return "\\_"
+parseUnderscore = try (char '_') >> return "\\_"
 
--- REMEMBER TO INCLUDE textcomp PACKAGE IN PREAMBLE
 parseTilde :: Parser String
-parseTilde = try $ do
-    _ <- char '~'
-    return "\\textasciitilde "
+parseTilde = try (char '_') >> return "\\textasciitilde "
 
 parseBackslash :: Parser String
-parseBackslash = try $ do
-    _ <- char '\\'
-    return "\\textbackslash "
+parseBackslash = try (char '\\') >> return "\\textbackslash "

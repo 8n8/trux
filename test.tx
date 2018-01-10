@@ -1,20 +1,26 @@
 title { `Kalman filter` }
 author { `True Ghiassi` }
 date { `04 April 2017` }
-body { `alman filtering, "also" ` math { z ^ { e } } `known a' $34.40 linear Smith & Co. quadratic 'estimation' (LQE), is an algorithm ` Math { equation { y = 2 } } ` that use's a series of measurements observed over time, containing statistical noise and other inaccuracies, and produces estimates ` math { 3 y + exp ( 42 x ^ { 2 } ) }
+body { `alman filtering, "also£" ` math { z ^e } `known a' $34.40 linear Smith & Co. quadratic 'estimation' (LQE), is an algorithm ` Math { equation { y = 2 } } ` that use's a series of measurements (see ` ref basiljet `), observed over time, containing statistical noise and other inaccuracies, and produces estimates ` math { 3 y + exp ( 42 x ^2 ) }
 Math { equation { sqrt { 32 } } }
-Math { equation { x x = 2 y = 1 } }
-Math { equation { ( bx z ^ { 2 } ) ( y ) } }
+Math { equation num hamish { x x = 2 y = 1 } }
+Math { equation { ( #x z ^2 ) ( y ) } }
 Math { equation { curly { x } log x ln y } }
 Math { equation { ( x ) div [ y ] } }
 header 1 { math { 3 y y } `Spanish text` }
 header 2 { math { 3 y y } `Spanish text` }
 header 3 { `Darbishire` }
 header 3 { `Darbishire` }
-Math { equation num basiljet { cos ( 2 x + 3 y + 4 z ^ { 2 } ) cosh sinh sin } }
+Math { equation num basiljet { cos ( 2 x + 3 y + 4 z ^2 ) cosh sinh sin } }
 Math {
-equation { x ^ { 2 } + 233.333 = 333 - ba bb bc bd be 0.2 f bg + }
-equation { 322 * 1 + bb bSigma = epsilon }
-equation { e = m [ c ^ { ( 2 ) } ] }
+equation { x ^2 + 233.333 = 333 - #a #b #c #d #e 0.2 f #g + }
+equation { 322 * 1 star + #b #Sigma = epsilon }
+equation { e = m [ c ^( 2 ) ] }
 equation { { x } / { y } `pp` `p` `potato` x = x sinh a < 23 } }
+`Here are some pretty integrals:`
+Math { equation { int { 3 x ^2 } Omega } }
+`Here are some partial derivatives:`
+Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
+`Here are some ordinary derivatives:`
+Math { equation { od x y 1 _32 >= 100 <= 23 ~= 20 } }
 }
