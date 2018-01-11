@@ -14,7 +14,7 @@ header 3 { `Darbishire` }
 Math { equation num basiljet { cos ( 2 x + 3 y + 4 z ^2 ) cosh sinh sin } }
 Math {
 equation { x ^2 + 233.333 = 333 - #a #b #c #d #e 0.2 f #g + }
-equation { 322 * 1 star + #b #Sigma = epsilon }
+equation { 322 * 1 star + #b #Sigma = epsilon for { epsilon <= 0 } }
 equation { e = m [ c ^( 2 ) ] }
 equation { { x } / { y } `pp` `p` `potato` x = x sinh a < 23 } }
 `Here are some pretty integrals:`

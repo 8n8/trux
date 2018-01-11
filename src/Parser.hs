@@ -1,6 +1,7 @@
 module Parser ( parse2Latex ) where
 
 import Control.Monad
+import Data.Map as Map
 import Data.Void ( Void )
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -135,6 +136,7 @@ mathElement2Latex mathElement = case mathElement of
     MathEnglishVar BoldMath var -> concat ["\\bm{", [var], "}"]
     MathEnglishVar ItalicMath var -> [var]
     MathOperatorChar operator -> [operator]
+    SimpleSubstitution latex -> latex
     MathNumbers numbers -> numbers
     GreekMath BoldMath greek -> concat ["\\bm{\\", greek, "}"]
     GreekMath ItalicMath greek -> "\\" ++ greek
@@ -332,6 +334,8 @@ newtype Id = Id String deriving Show
 data MathElement =
     MathOrdinaryText String |
     MathEnglishVar MathStyle Char |
+    Hollow Char |
+    SimpleSubstitution String |
     MathOperatorChar Char |
     MathNumbers String |
     GreekMath MathStyle String |
@@ -354,8 +358,16 @@ data MathElement =
         MathElement Char MathElement Char MathElement Char |
     LessThanOrEqualTo |
     MoreThanOrEqualTo |
-    ApproximatelyEqualTo
+    ApproximatelyEqualTo |
+    SetSymbols Set
     deriving Show
+
+data Set = O | N | Z | Q | A | R | C | H | O | S | In | NotIn | Owns |
+    Subset | SubsetEqual | Superset | SupersetEqual | Cup | Cap | Diff
+
+simpleSymbols :: Map.Map String MathElement
+simpleSymbols = [ "nat", "integer", "real", "in", "notin", "owns"
+    , "subset", "subset=", "supset", "supset=", "cup", "cap", "setdiff" ]
 
 data MathStyle = BoldMath | ItalicMath deriving Show
 
@@ -595,6 +607,9 @@ parseMathItalicChar = try $ do
     character <- parseMathEnglishChar
     return $ MathEnglishVar ItalicMath character
 
+parseMathHollowChar :: Parser MathElement
+parseMathHollowChar = Hollow <$> parseMathEnglishCapitals
+
 parseMathBoldChar :: Parser MathElement
 parseMathBoldChar = try $ do
     _ <- try $ char '#'
@@ -603,6 +618,10 @@ parseMathBoldChar = try $ do
 
 parseMathEnglishChar :: Parser Char
 parseMathEnglishChar = try $ choice $ fmap parseCharFunc ordinaryMathChars
+
+parseMathEnglishCapitals :: Parser Char
+parseMathEnglishCapitals =
+    try $ choice $ parseCharFunc <$> "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 parseCharFunc :: Char -> Parser Char
 parseCharFunc character = try $ do

@@ -6,7 +6,7 @@
 + DONE add short forms for maths subscripts and superscripts
 + DONE add <= and >=
 + DONE add approximately equal to sign
-+ add 'for' notation, as in x = y  for x in R
++ NOT DOING add 'for' notation, as in x = y  for x in R
 + add number set symbols, like R, Z, N etc
 + add in sign (for sets)
 + add plain text insertion for math mode
@@ -35,6 +35,8 @@
 + use cfrac rather than frac
 + use cleveref to automatically fill in the "Section" or "equation" in references
 + use siunitx to align table figures at the decimal point - see https://tex.stackexchange.com/questions/2746/aligning-numbers-by-decimal-points-in-table-columns/2747#2747
++ add not equal to symbol
++ add list of internal references to for each section
 + add an easy way of drawing pretty graphs
 + add overlines to math variables
 + add atoms for inserting whitespace in math mode
@@ -76,3 +78,4 @@
 + add single bracket symbols in their various sizes
 + add nice si units to math mode
 + add hyperref to preamble
++ add logic notation
