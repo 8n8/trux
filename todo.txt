@@ -6,14 +6,14 @@
 + DONE add short forms for maths subscripts and superscripts
 + DONE add <= and >=
 + DONE add approximately equal to sign
-+ NOT DOING add 'for' notation, as in x = y  for x in R
-+ add number set symbols, like R, Z, N etc
-+ add in sign (for sets)
-+ add plain text insertion for math mode
-+ add sin, tan, cos, sinh, cosh, tanh, log, ln
-+ forbid extra spaces at end of math environment
-+ change latexmk command to use non-stop mode
-+ change latexmk command so that it only output error messages
++ DONE add 'for' notation, as in x = y  for x in R
++ DONE add number set symbols, like R, Z, N etc
++ DONE add in sign (for sets)
++ DONE add plain text insertion for math mode
++ DONE add sin, tan, cos, sinh, cosh, tanh, log, ln
++ DONE change latexmk command to use non-stop mode
++ DONE change latexmk command so that it only output error messages
++ make trux try to carry on parsing after a mistake, so that you get several lots of errors
 + add math division symbol
 + make display math mode use align rather than \[\]
 + add newline atom for display math mode

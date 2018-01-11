@@ -6,7 +6,7 @@ Math { equation { sqrt { 32 } } }
 Math { equation num hamish { x x = 2 y = 1 } }
 Math { equation { ( #x z ^2 ) ( y ) } }
 Math { equation { curly { x } log x ln y } }
-Math { equation { ( x ) div [ y ] } }
+Math { equation { ( x ) dif [ y ] } }
 header 1 { math { 3 y y } `Spanish text` }
 header 2 { math { 3 y y } `Spanish text` }
 header 3 { `Darbishire` }
@@ -14,7 +14,7 @@ header 3 { `Darbishire` }
 Math { equation num basiljet { cos ( 2 x + 3 y + 4 z ^2 ) cosh sinh sin } }
 Math {
 equation { x ^2 + 233.333 = 333 - #a #b #c #d #e 0.2 f #g + }
-equation { 322 * 1 star + #b #Sigma = epsilon for { epsilon <= 0 } }
+equation { 322 * 1 star + #b #Sigma = epsilon `, for ` epsilon <= 0 }
 equation { e = m [ c ^( 2 ) ] }
 equation { { x } / { y } `pp` `p` `potato` x = x sinh a < 23 } }
 `Here are some pretty integrals:`
@@ -22,5 +22,7 @@ Math { equation { int { 3 x ^2 } Omega } }
 `Here are some partial derivatives:`
 Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
 `Here are some ordinary derivatives:`
-Math { equation { od x y 1 _32 >= 100 <= 23 ~= 20 } }
+Math {
+equation { od x y 1 _32 >= 100 <= 23 ~= 20 for { x in hollow R } }
+}
 }

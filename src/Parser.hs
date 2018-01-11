@@ -1,7 +1,6 @@
 module Parser ( parse2Latex ) where
 
 import Control.Monad
-import Data.Map as Map
 import Data.Void ( Void )
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -19,6 +18,7 @@ preamble =
     "\\documentclass{article}\n\
     \\\usepackage[utf8]{inputenc}\n\
     \\\usepackage{amsmath}\n\
+    \\\usepackage{amsfonts}\n\
     \\\usepackage{bm}\n\
     \\\usepackage{textcomp}\n\
     \\\usepackage{commath}\n\
@@ -136,6 +136,7 @@ mathElement2Latex mathElement = case mathElement of
     MathEnglishVar BoldMath var -> concat ["\\bm{", [var], "}"]
     MathEnglishVar ItalicMath var -> [var]
     MathOperatorChar operator -> [operator]
+    Hollow character -> concat ["\\mathbb{", character:"}"]
     SimpleSubstitution latex -> latex
     MathNumbers numbers -> numbers
     GreekMath BoldMath greek -> concat ["\\bm{\\", greek, "}"]
@@ -155,17 +156,15 @@ mathElement2Latex mathElement = case mathElement of
         concat ["\\left(", math2Latex contents, "\\right)"]
     SquareBracket contents ->
         concat ["\\left[", math2Latex contents, "\\right]"]
-    SpecialMathSymbol symbol -> concat ["\\", symbol, " "]
     AbsoluteBracket contents ->
         concat ["\\left|", math2Latex contents, "\\right|"]
-    Multiplication -> "\\times "
-    Star -> "*"
+    Condition contents ->
+        concat ["\\condition{for $", math2Latex contents, "$}"]
     Integral contents wrt -> concat
         [ "\\int "
         , math2Latex contents
         , "\\dif "
         , mathElement2Latex wrt ]
-    Differential -> "\\dif "
     OrdinaryDerivative ofvar wrt degree -> concat
         [ "\\dod"
         , derivDegree2Latex degree
@@ -196,9 +195,6 @@ mathElement2Latex mathElement = case mathElement of
         , "}{"
         , [degree3]
         , "}" ]
-    LessThanOrEqualTo -> "\\leq "
-    MoreThanOrEqualTo -> "\\geq "
-    ApproximatelyEqualTo -> "\\simeq "
 
 derivDegree2Latex :: Char -> String
 derivDegree2Latex '1' = ""
@@ -346,33 +342,16 @@ data MathElement =
     CurlyBracket [MathElement] |
     CurvedBracket [MathElement] |
     SquareBracket [MathElement] |
-    SpecialMathSymbol String |
     AbsoluteBracket [MathElement] |
-    Multiplication |
-    Star |
     Integral [MathElement] MathElement |
-    Differential |
     PartialDerivative MathElement MathElement Char |
     OrdinaryDerivative MathElement MathElement Char |
+    Condition [MathElement] |
     MixedPartialDerivative
-        MathElement Char MathElement Char MathElement Char |
-    LessThanOrEqualTo |
-    MoreThanOrEqualTo |
-    ApproximatelyEqualTo |
-    SetSymbols Set
+        MathElement Char MathElement Char MathElement Char
     deriving Show
 
-data Set = O | N | Z | Q | A | R | C | H | O | S | In | NotIn | Owns |
-    Subset | SubsetEqual | Superset | SupersetEqual | Cup | Cap | Diff
-
-simpleSymbols :: Map.Map String MathElement
-simpleSymbols = [ "nat", "integer", "real", "in", "notin", "owns"
-    , "subset", "subset=", "supset", "supset=", "cup", "cap", "setdiff" ]
-
 data MathStyle = BoldMath | ItalicMath deriving Show
-
-parseDifferential :: Parser MathElement
-parseDifferential = parseFuncName "dif" >> return Differential 
 
 parseIntegral :: Parser MathElement
 parseIntegral = do
@@ -380,6 +359,12 @@ parseIntegral = do
     content <- parseList '{' '}' parseMathElement
     wrt <- parseMathElement
     return $ Integral content wrt
+
+parseCondition :: Parser MathElement
+parseCondition = do
+    _ <- parseFuncName "for"
+    content <- parseList '{' '}' parseMathElement
+    return $ Condition content
 
 parseWhiteSpace :: Parser ()
 parseWhiteSpace = void (try $ char ' ') <|> void (try newline)
@@ -410,12 +395,15 @@ parseDisplayMathLine = do
     return $ DisplayMathLine numbered content
 
 parseMathElement :: Parser MathElement
-parseMathElement = try $ choice
+parseMathElement = choice
     [ parseMathOrdinaryText
     , parseMathOperatorChar
+    , parseCondition
+    , parseMathHollowChar
     , parseMathEnglishVar
     , parseMathNumbers
     , parseGreekMath
+    , parseSimpleSubstitution
     , parseSqrt
     , parsePower
     , parseFraction
@@ -423,39 +411,48 @@ parseMathElement = try $ choice
     , parseCurlyBracket
     , parseCurvedBracket
     , parseSquareBracket
-    , parseSpecialMathSymbol
     , parseAbsolute
-    , parseMultiplication
-    , parseStar
     , parseOrdinaryDerivative
     , parsePartialDerivative
     , parseMixedPartialDerivative
-    , parseIntegral
-    , parseDifferential
-    , parseLessThanOrEqualTo
-    , parseMoreThanOrEqualTo
-    , parseApproximatelyEqualTo ]
+    , parseIntegral ]
 
-parseApproximatelyEqualTo :: Parser MathElement
-parseApproximatelyEqualTo =
-    parseFuncName "~=" >> return ApproximatelyEqualTo
+parseSimpleSubstitution :: Parser MathElement
+parseSimpleSubstitution =
+    choice $ parseGeneralSimpleSub <$> simpleSubstitutions
 
-parseLessThanOrEqualTo :: Parser MathElement
-parseLessThanOrEqualTo = parseFuncName "<=" >> return LessThanOrEqualTo
+parseGeneralSimpleSub :: (String, String) -> Parser MathElement
+parseGeneralSimpleSub (truxcode, latexcode) =
+    parseFuncName truxcode >> return (SimpleSubstitution latexcode)
 
-parseMoreThanOrEqualTo :: Parser MathElement
-parseMoreThanOrEqualTo = parseFuncName ">=" >> return MoreThanOrEqualTo
-
-parseMultiplication :: Parser MathElement
-parseMultiplication = parseFuncName "*" >> return Multiplication
-
-parseSpecialMathSymbol :: Parser MathElement
-parseSpecialMathSymbol =
-    SpecialMathSymbol <$> choice (parseFuncName <$> specialMathSymbols)
-
-specialMathSymbols :: [String]
-specialMathSymbols = [
-    "exp", "log", "ln", "sin", "cos", "tan", "sinh", "cosh", "tanh", "div"]
+simpleSubstitutions :: [(String, String)]
+simpleSubstitutions =
+    [ ("exp", "\\exp ")
+    , ("log", "\\log ")
+    , ("ln", "\\ln ")
+    , ("sin", "\\sin ")
+    , ("cos", "\\cos ")
+    , ("tan", "\\tan ")
+    , ("sinh", "\\sinh ")
+    , ("cosh", "\\cosh ")
+    , ("tanh", "\\tanh ")
+    , ("dif", "\\dif ")
+    , ("*", "\\times ") 
+    , ("star", "*")
+    , ("<=", "\\leq ")
+    , (">=", "\\geq ")
+    , ("~=", "\\simeq ")
+    , ("in", "\\in ")
+    , ("notin", "\\notin ")
+    , ("owns", "\\ni ")
+    , ("subset", "\\subset ")
+    , ("subset=", "\\subseteq ")
+    , ("superset", "\\supset ")
+    , ("superset=", "\\supseteq ")
+    , ("union", "\\cup ")
+    , ("intersect", "\\cap ")
+    , ("empty", "\\emptyset ")
+    , ("diff", "\\setminus ") ]
 
 parseSquareBracket :: Parser MathElement
 parseSquareBracket = SquareBracket <$> parseList '[' ']' parseMathElement
@@ -593,9 +590,6 @@ parseMathOperatorChar = do
     character <- choice $ fmap parseCharFunc mathOperatorChars
     return $ MathOperatorChar character
 
-parseStar :: Parser MathElement
-parseStar = parseFuncName "star" >> return Star
-
 mathOperatorChars :: String
 mathOperatorChars = "!=%-+\'<>.,;:@\"/"
 
@@ -608,7 +602,8 @@ parseMathItalicChar = try $ do
     return $ MathEnglishVar ItalicMath character
 
 parseMathHollowChar :: Parser MathElement
-parseMathHollowChar = Hollow <$> parseMathEnglishCapitals
+parseMathHollowChar =
+    parseFuncName "hollow" >> Hollow <$> parseMathEnglishCapitals
 
 parseMathBoldChar :: Parser MathElement
 parseMathBoldChar = try $ do
