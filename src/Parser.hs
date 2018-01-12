@@ -22,6 +22,7 @@ preamble =
     \\\usepackage{bm}\n\
     \\\usepackage{textcomp}\n\
     \\\usepackage{commath}\n\
+    \\\usepackage[official]{eurosym}\n\
     \\\usepackage{breqn}\n"
 
 parse2Latex :: Parser String
@@ -49,8 +50,10 @@ element2latex element = case element of
     InlineMath contents -> inlineMath2latex contents
     Header numbered level elements -> header2latex numbered level elements 
     CrossReference (Id idCode) -> concat [ "\\ref{", idCode, "}" ]
+    Umlaut character -> ['\\', '\"', character]
+    ElementSimpleSub symbol -> symbol
 
-header2latex :: Numbered -> HeaderLevel -> [HeaderElement] -> String
+header2latex :: Numbered -> HeaderLevel -> [Element] -> String
 header2latex numbered level elements = concat
     [ "\\"
     , case level of
@@ -61,7 +64,7 @@ header2latex numbered level elements = concat
         NumberOn _ -> ""
         NumberOff -> "*"
     , "{"
-    , headerElements2Latex elements
+    , concatMap element2latex elements
     , "}"
     , case numbered of
         NumberOn (Id idCode) -> concat [ "\\label{", idCode, "}" ]
@@ -119,13 +122,8 @@ date2latex (Just (Date headerElements)) = concat
     , "}" ]
 date2latex Nothing = ""
 
-headerElements2Latex :: [HeaderElement] -> String
-headerElements2Latex = concatMap headerElement2Latex
-
-headerElement2Latex :: HeaderElement -> String
-headerElement2Latex (HeaderMath mathElements) =
-    concat [ "$", math2Latex mathElements, "$" ]
-headerElement2Latex (HeaderText text) = text
+headerElements2Latex :: [Element] -> String
+headerElements2Latex = concatMap element2latex
 
 math2Latex :: [MathElement] -> String
 math2Latex = concatMap mathElement2Latex
@@ -142,6 +140,12 @@ mathElement2Latex mathElement = case mathElement of
     GreekMath BoldMath greek -> concat ["\\bm{\\", greek, "}"]
     GreekMath ItalicMath greek -> "\\" ++ greek
     Sqrt contents -> concat ["\\sqrt{", math2Latex contents, "}"]
+    NthRoot n contents -> concat
+        [ "\\sqrt["
+        , mathElement2Latex n
+        , "]{"
+        , math2Latex contents
+        , "}" ]
     Power contents -> concat ["^{", math2Latex contents, "}"]
     Fraction numerator denominator -> concat
         [ "\\dfrac{"
@@ -204,7 +208,7 @@ data Document = Document (Maybe DocHeader) DocumentBody deriving Show
 
 data DocHeader = DocHeader Title (Maybe Author) (Maybe Date) deriving Show
 
-newtype Date = Date [HeaderElement] deriving Show
+newtype Date = Date [Element] deriving Show
 
 newtype DocumentBody = DocumentBody [Element] deriving Show
 
@@ -212,13 +216,36 @@ data Element =
     Text String |
     DisplayMath [DisplayMathLine] |
     InlineMath [MathElement] |
-    Header Numbered HeaderLevel [HeaderElement] |
-    CrossReference Id
+    Header Numbered HeaderLevel [Element] |
+    CrossReference Id |
+    Umlaut Char |
+    ElementSimpleSub String
     deriving Show
 
-newtype Title = Title [HeaderElement] deriving Show
+newtype Title = Title [Element] deriving Show
 
-newtype Author = Author [HeaderElement] deriving Show
+newtype Author = Author [Element] deriving Show
+
+parseElementSimpleSub :: Parser Element
+parseElementSimpleSub =
+    choice $ parseGeneralElementSimpleSub <$> simpleElementSubs
+
+parseGeneralElementSimpleSub :: (String, String) -> Parser Element
+parseGeneralElementSimpleSub (truxcode, latexcode) =
+    parseFuncName truxcode >> return (ElementSimpleSub latexcode)
+
+simpleElementSubs :: [(String, String)]
+simpleElementSubs =
+    [ ("euro", "\\euro{}")
+    , ("p", "\n\n")
+    ]
+
+parseUmlaut :: Parser Element
+parseUmlaut = do
+    _ <- try $ char '\"' 
+    character <- choice $ parseCharFunc <$>
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return $ Umlaut character
 
 parseDocument :: Parser Document
 parseDocument = do
@@ -264,12 +291,14 @@ parseAuthor =
     return Nothing
 
 parseElement :: Parser Element
-parseElement =
-    parseText <|>
-    parseDisplayMath <|>
-    parseInlineMath <|>
-    parseHeader <|>
-    parseCrossReference
+parseElement = choice 
+    [ parseText
+    , parseDisplayMath
+    , parseInlineMath
+    , parseHeader
+    , parseCrossReference
+    , parseElementSimpleSub
+    , parseUmlaut ]
 
 parseCrossReference :: Parser Element
 parseCrossReference = do
@@ -292,10 +321,6 @@ parseHeader2Level = parseFuncName "2" >> return HeaderTwo
 parseHeader3Level :: Parser HeaderLevel
 parseHeader3Level = parseFuncName "3" >> return HeaderThree
 
-data HeaderElement =
-    HeaderMath [MathElement] | HeaderText String
-    deriving Show
-
 parseHeader :: Parser Element
 parseHeader = do
     _ <- parseFuncName "header"
@@ -304,14 +329,12 @@ parseHeader = do
     header <- parseList bracket1 bracket2 parseHeaderElement
     return $ Header numbered headerLevel header
 
-parseHeaderElement :: Parser HeaderElement
-parseHeaderElement = parseMathInHeader <|> parseTextInHeader        
-
-parseTextInHeader :: Parser HeaderElement
-parseTextInHeader = fmap HeaderText parseTextContent
-
-parseMathInHeader :: Parser HeaderElement
-parseMathInHeader = fmap HeaderMath parseInlineMathContent
+parseHeaderElement :: Parser Element
+parseHeaderElement = choice
+    [ parseText
+    , parseInlineMath
+    , parseCrossReference
+    , parseUmlaut ]
 
 parseInlineMathContent :: Parser [MathElement]
 parseInlineMathContent = do
@@ -336,6 +359,7 @@ data MathElement =
     MathNumbers String |
     GreekMath MathStyle String |
     Sqrt [MathElement] |
+    NthRoot MathElement [MathElement] |
     Power [MathElement] |
     Fraction [MathElement] [MathElement] |
     Subscript [MathElement] |
@@ -405,6 +429,7 @@ parseMathElement = choice
     , parseGreekMath
     , parseSimpleSubstitution
     , parseSqrt
+    , parseNthRoot
     , parsePower
     , parseFraction
     , parseSubscript
@@ -452,7 +477,8 @@ simpleSubstitutions =
     , ("union", "\\cup ")
     , ("intersect", "\\cap ")
     , ("empty", "\\emptyset ")
-    , ("diff", "\\setminus ") ]
+    , ("diff", "\\setminus ")
+    , ("+-", "\\pm ") ]
 
 parseSquareBracket :: Parser MathElement
 parseSquareBracket = SquareBracket <$> parseList '[' ']' parseMathElement
@@ -547,6 +573,13 @@ parseSingleDigit = do
 
 parseAbsolute :: Parser MathElement
 parseAbsolute = AbsoluteBracket <$> parseList '|' '|' parseMathElement
+
+parseNthRoot :: Parser MathElement
+parseNthRoot = do
+    _ <- parseFuncName "nthRoot"
+    n <- parseMathElement
+    content <- parseList '{' '}' parseMathElement
+    return $ NthRoot n content
 
 parseSqrt :: Parser MathElement
 parseSqrt = do
