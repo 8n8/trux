@@ -23,26 +23,24 @@
 + DONE add plus-minus symbol to math mode
 + DONE add cube roots and fourth roots etc
 + DONE add paragraph breaks
-+ break up Parser.hs into several modules: perhaps a maths module and a 2latex module would be good?
-+ add line comments
-+ add block comments
-+ add hats to math variables
-+ add underlines to math variables
-+ add underline to ordinary mode
-+ add mod to math mode
-+ add max and min to math mode
-+ add full-size option to disaply math
-+ use cfrac rather than frac
-+ use cleveref to automatically fill in the "Section" or "equation" in references
-+ use siunitx to align table figures at the decimal point - see https://tex.stackexchange.com/questions/2746/aligning-numbers-by-decimal-points-in-table-columns/2747#2747
-+ add not equal to symbol
-+ add list of internal references to for each section
-+ add configuration option to switch off date
-+ ? put a tilde before all the citations to avoid awkward line breaks
-+ add an easy way of drawing pretty graphs
-+ add overlines to math variables
-+ add atoms for inserting whitespace in math mode
-+ add atoms for inserting whitespace in normal mode
++ DONE break up Parser.hs into several modules: perhaps a maths module and a 2latex module would be good?
++ NOT DOING add line comments
++ NOT DOING add block comments
++ DONE add hats to math variables
++ DONE add underlines to math variables
++ DONE add underline to ordinary mode
++ DONE add mod to math mode
++ DONE add max and min to math mode
++ DONE use cfrac rather than frac
++ DONE use cleveref to automatically fill in the "Section" or "equation" in references
++ DONE fix problem of strange gap after Mr.
++ DONE fix problem of bad error message with an extra space in a large chunk of text
++ NOT DOING make one instance of alphabets in code to avoid duplication
++ DONE add not equal to symbol
++ NO NEED WITH CREF ? put a tilde before all the citations to avoid awkward line breaks
++ DONE add overlines to math variables
++ NO NEED add atoms for inserting whitespace in math mode
++ NO NEED add atoms for inserting whitespace in normal mode
 + add page headers and footers
 + add footnotes
 + add internal cross-references
@@ -81,3 +79,7 @@
 + add nice si units to math mode
 + add hyperref to preamble
 + add logic notation
++ use siunitx to align table figures at the decimal point - see https://tex.stackexchange.com/questions/2746/aligning-numbers-by-decimal-points-in-table-columns/2747#2747
++ add configuration option to switch off date
++ add list of internal references to for each section
++ add an easy way of drawing pretty graphs

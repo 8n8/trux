@@ -1,11 +1,23 @@
 module Parser ( parse2Latex ) where
 
-import Control.Monad
-import Data.Void ( Void )
+import CommonParsers 
+    ( Id ( Id )
+    , Numbered (NumberOff, NumberOn)
+    , Parser
+    , parseCharFunc
+    , parseFuncName
+    , parseId
+    , parseList
+    , parseNumbered
+    , parseTextContent
+    )
+import MathParsers 
+    ( parseInlineMath
+    , Math
+    , math2latex
+    , parseDisplayMath )
 import Text.Megaparsec
 import Text.Megaparsec.Char
-
-type Parser = Parsec Void String
 
 bracket1 :: Char
 bracket1 = '{'
@@ -23,7 +35,11 @@ preamble =
     \\\usepackage{textcomp}\n\
     \\\usepackage{commath}\n\
     \\\usepackage[official]{eurosym}\n\
-    \\\usepackage{breqn}\n"
+    \\\frenchspacing\n\
+    \\\usepackage{breqn}\n\
+    \\\usepackage{cleveref}\n\
+    \\\creflabelformat{equation}{#2#1#3}\n\
+    \\\crefdefaultlabelformat{#2#1#3}\n"
 
 parse2Latex :: Parser String
 parse2Latex = fmap doc2latex parseDocument
@@ -46,10 +62,9 @@ body2latex header (DocumentBody elements) =
 element2latex :: Element -> String
 element2latex element = case element of
     Text text -> text
-    DisplayMath equations -> displayMath2latex equations
-    InlineMath contents -> inlineMath2latex contents
+    MathElement contents -> math2latex contents
     Header numbered level elements -> header2latex numbered level elements 
-    CrossReference (Id idCode) -> concat [ "\\ref{", idCode, "}" ]
+    CrossReference (Id idCode) -> concat [ "\\cref{", idCode, "}" ]
     Umlaut character -> ['\\', '\"', character]
     ElementSimpleSub symbol -> symbol
 
@@ -70,32 +85,6 @@ header2latex numbered level elements = concat
         NumberOn (Id idCode) -> concat [ "\\label{", idCode, "}" ]
         NumberOff -> ""
     ]
-
-inlineMath2latex :: [MathElement] -> String
-inlineMath2latex elements =
-    concat [ "$", concatMap mathElement2Latex elements, "$" ]
-
-displayMath2latex :: [DisplayMathLine] -> String
-displayMath2latex equations = concat
-    [ "\\begin{dgroup*}"
-    , concatMap equation2latex equations
-    , "\\end{dgroup*}" ]
-
-equation2latex :: DisplayMathLine -> String
-equation2latex (DisplayMathLine numbered elements) = case numbered of
-    NumberOn (Id idCode) -> concat
-        [ "\\begin{dmath}"
-        , mathContents
-        , "\\label{"
-        , idCode
-        , "}"
-        , "\\end{dmath}" ]
-    NumberOff -> concat
-        [ "\\begin{dmath*}"
-        , mathContents
-        , "\\end{dmath*}" ]
-  where
-    mathContents = concatMap mathElement2Latex elements
     
 docHeader2latex :: Maybe DocHeader -> String
 docHeader2latex Nothing = ""
@@ -125,85 +114,6 @@ date2latex Nothing = ""
 headerElements2Latex :: [Element] -> String
 headerElements2Latex = concatMap element2latex
 
-math2Latex :: [MathElement] -> String
-math2Latex = concatMap mathElement2Latex
-
-mathElement2Latex :: MathElement -> String
-mathElement2Latex mathElement = case mathElement of
-    MathOrdinaryText text -> concat ["\\textrm{", text, "}"] 
-    MathEnglishVar BoldMath var -> concat ["\\bm{", [var], "}"]
-    MathEnglishVar ItalicMath var -> [var]
-    MathOperatorChar operator -> [operator]
-    Hollow character -> concat ["\\mathbb{", character:"}"]
-    SimpleSubstitution latex -> latex
-    MathNumbers numbers -> numbers
-    GreekMath BoldMath greek -> concat ["\\bm{\\", greek, "}"]
-    GreekMath ItalicMath greek -> "\\" ++ greek
-    Sqrt contents -> concat ["\\sqrt{", math2Latex contents, "}"]
-    NthRoot n contents -> concat
-        [ "\\sqrt["
-        , mathElement2Latex n
-        , "]{"
-        , math2Latex contents
-        , "}" ]
-    Power contents -> concat ["^{", math2Latex contents, "}"]
-    Fraction numerator denominator -> concat
-        [ "\\dfrac{"
-        , math2Latex numerator
-        , "}{"
-        , math2Latex denominator
-        , "}" ]
-    Subscript contents -> concat ["_{", math2Latex contents, "}"]
-    CurlyBracket contents ->
-        concat ["\\left\\{", math2Latex contents, "\\right\\}"]
-    CurvedBracket contents ->
-        concat ["\\left(", math2Latex contents, "\\right)"]
-    SquareBracket contents ->
-        concat ["\\left[", math2Latex contents, "\\right]"]
-    AbsoluteBracket contents ->
-        concat ["\\left|", math2Latex contents, "\\right|"]
-    Condition contents ->
-        concat ["\\condition{for $", math2Latex contents, "$}"]
-    Integral contents wrt -> concat
-        [ "\\int "
-        , math2Latex contents
-        , "\\dif "
-        , mathElement2Latex wrt ]
-    OrdinaryDerivative ofvar wrt degree -> concat
-        [ "\\dod"
-        , derivDegree2Latex degree
-        , "{"
-        , mathElement2Latex ofvar
-        , "}{"
-        , mathElement2Latex wrt
-        , "}" ]
-    PartialDerivative ofvar wrt degree -> concat
-        [ "\\dpd"
-        , derivDegree2Latex degree
-        , "{"
-        , mathElement2Latex ofvar
-        , "}{"
-        , mathElement2Latex wrt
-        , "}" ]
-    MixedPartialDerivative wrt1 degree1 wrt2 degree2 wrt3 degree3 -> concat
-        [ "\\dmd{"
-        , mathElement2Latex wrt1
-        , "}{"
-        , [degree1]
-        , "}{"
-        , mathElement2Latex wrt2
-        , "}{"
-        , [degree2]
-        , "}{"
-        , mathElement2Latex wrt3
-        , "}{"
-        , [degree3]
-        , "}" ]
-
-derivDegree2Latex :: Char -> String
-derivDegree2Latex '1' = ""
-derivDegree2Latex degree = [ '[', degree, ']' ]
-
 data Document = Document (Maybe DocHeader) DocumentBody deriving Show
 
 data DocHeader = DocHeader Title (Maybe Author) (Maybe Date) deriving Show
@@ -214,13 +124,13 @@ newtype DocumentBody = DocumentBody [Element] deriving Show
 
 data Element =
     Text String |
-    DisplayMath [DisplayMathLine] |
-    InlineMath [MathElement] |
+    MathElement Math |
     Header Numbered HeaderLevel [Element] |
     CrossReference Id |
     Umlaut Char |
     ElementSimpleSub String
     deriving Show
+
 
 newtype Title = Title [Element] deriving Show
 
@@ -293,8 +203,8 @@ parseAuthor =
 parseElement :: Parser Element
 parseElement = choice 
     [ parseText
-    , parseDisplayMath
-    , parseInlineMath
+    , MathElement <$> parseDisplayMath
+    , MathElement <$> parseInlineMath
     , parseHeader
     , parseCrossReference
     , parseElementSimpleSub
@@ -332,417 +242,9 @@ parseHeader = do
 parseHeaderElement :: Parser Element
 parseHeaderElement = choice
     [ parseText
-    , parseInlineMath
+    , MathElement <$> parseInlineMath
     , parseCrossReference
     , parseUmlaut ]
 
-parseInlineMathContent :: Parser [MathElement]
-parseInlineMathContent = do
-    _ <- parseFuncName "math"
-    parseList '{' '}' parseMathElement
-
-parseInlineMath :: Parser Element
-parseInlineMath = fmap InlineMath parseInlineMathContent
-
-data DisplayMathLine = DisplayMathLine Numbered [MathElement] deriving Show
-
-data Numbered = NumberOn Id | NumberOff deriving Show
-
-newtype Id = Id String deriving Show
-
-data MathElement =
-    MathOrdinaryText String |
-    MathEnglishVar MathStyle Char |
-    Hollow Char |
-    SimpleSubstitution String |
-    MathOperatorChar Char |
-    MathNumbers String |
-    GreekMath MathStyle String |
-    Sqrt [MathElement] |
-    NthRoot MathElement [MathElement] |
-    Power [MathElement] |
-    Fraction [MathElement] [MathElement] |
-    Subscript [MathElement] |
-    CurlyBracket [MathElement] |
-    CurvedBracket [MathElement] |
-    SquareBracket [MathElement] |
-    AbsoluteBracket [MathElement] |
-    Integral [MathElement] MathElement |
-    PartialDerivative MathElement MathElement Char |
-    OrdinaryDerivative MathElement MathElement Char |
-    Condition [MathElement] |
-    MixedPartialDerivative
-        MathElement Char MathElement Char MathElement Char
-    deriving Show
-
-data MathStyle = BoldMath | ItalicMath deriving Show
-
-parseIntegral :: Parser MathElement
-parseIntegral = do
-    _ <- parseFuncName "int"
-    content <- parseList '{' '}' parseMathElement
-    wrt <- parseMathElement
-    return $ Integral content wrt
-
-parseCondition :: Parser MathElement
-parseCondition = do
-    _ <- parseFuncName "for"
-    content <- parseList '{' '}' parseMathElement
-    return $ Condition content
-
-parseWhiteSpace :: Parser ()
-parseWhiteSpace = void (try $ char ' ') <|> void (try newline)
-
-parseList :: (Show c) => Char -> Char -> Parser c -> Parser [c]
-parseList startChar stopChar parseItem = do
-    _ <- try $ char startChar
-    parseWhiteSpace
-    content <- try $ some parseItem
-    _ <- try $ char stopChar
-    parseWhiteSpace
-    return content
-
-parseFuncName :: String -> Parser String
-parseFuncName name = try $ string name >> parseWhiteSpace >> return name
-
-parseDisplayMath :: Parser Element
-parseDisplayMath = do
-    _ <- parseFuncName "Math"
-    content <- parseList '{' '}' parseDisplayMathLine 
-    return $ DisplayMath content
-
-parseDisplayMathLine :: Parser DisplayMathLine
-parseDisplayMathLine = do
-    _ <- parseFuncName "equation"
-    numbered <- parseNumbered
-    content <- parseList '{' '}' parseMathElement
-    return $ DisplayMathLine numbered content
-
-parseMathElement :: Parser MathElement
-parseMathElement = choice
-    [ parseMathOrdinaryText
-    , parseMathOperatorChar
-    , parseCondition
-    , parseMathHollowChar
-    , parseMathEnglishVar
-    , parseMathNumbers
-    , parseGreekMath
-    , parseSimpleSubstitution
-    , parseSqrt
-    , parseNthRoot
-    , parsePower
-    , parseFraction
-    , parseSubscript
-    , parseCurlyBracket
-    , parseCurvedBracket
-    , parseSquareBracket
-    , parseAbsolute
-    , parseOrdinaryDerivative
-    , parsePartialDerivative
-    , parseMixedPartialDerivative
-    , parseIntegral ]
-
-parseSimpleSubstitution :: Parser MathElement
-parseSimpleSubstitution =
-    choice $ parseGeneralSimpleSub <$> simpleSubstitutions
-
-parseGeneralSimpleSub :: (String, String) -> Parser MathElement
-parseGeneralSimpleSub (truxcode, latexcode) =
-    parseFuncName truxcode >> return (SimpleSubstitution latexcode)
-
-simpleSubstitutions :: [(String, String)]
-simpleSubstitutions =
-    [ ("exp", "\\exp ")
-    , ("log", "\\log ")
-    , ("ln", "\\ln ")
-    , ("sin", "\\sin ")
-    , ("cos", "\\cos ")
-    , ("tan", "\\tan ")
-    , ("sinh", "\\sinh ")
-    , ("cosh", "\\cosh ")
-    , ("tanh", "\\tanh ")
-    , ("dif", "\\dif ")
-    , ("*", "\\times ") 
-    , ("star", "*")
-    , ("<=", "\\leq ")
-    , (">=", "\\geq ")
-    , ("~=", "\\simeq ")
-    , ("in", "\\in ")
-    , ("notin", "\\notin ")
-    , ("owns", "\\ni ")
-    , ("subset", "\\subset ")
-    , ("subset=", "\\subseteq ")
-    , ("superset", "\\supset ")
-    , ("superset=", "\\supseteq ")
-    , ("union", "\\cup ")
-    , ("intersect", "\\cap ")
-    , ("empty", "\\emptyset ")
-    , ("diff", "\\setminus ")
-    , ("+-", "\\pm ") ]
-
-parseSquareBracket :: Parser MathElement
-parseSquareBracket = SquareBracket <$> parseList '[' ']' parseMathElement
-
-parseCurvedBracket :: Parser MathElement
-parseCurvedBracket = CurvedBracket <$> parseList '(' ')' parseMathElement
-
-parseCurlyBracket :: Parser MathElement
-parseCurlyBracket = do
-    _ <- parseFuncName "curly"
-    content <- parseList '{' '}' parseMathElement
-    return $ CurlyBracket content
-
-parseFraction :: Parser MathElement
-parseFraction = do
-    numerator <- parseList '{' '}' parseMathElement
-    _ <- parseFuncName "/"
-    denominator <- parseList '{' '}' parseMathElement
-    return $ Fraction numerator denominator
-
-parseSubscript :: Parser MathElement
-parseSubscript = parseShortSubscript <|> parseLongSubscript
-
-parseShortSubscript :: Parser MathElement
-parseShortSubscript = try $ do
-    _ <- try $ char '_'
-    element <- parseMathElement
-    return $ Subscript [element]
-
-parseLongSubscript :: Parser MathElement
-parseLongSubscript = do
-    _ <- parseFuncName "_"
-    content <- parseList '{' '}' parseMathElement
-    case content of
-        [_] -> fail "For subscripts containing only one element, use \
-            \_element notation, such as x _3."
-        _ -> return $ Subscript content
-
-parsePower :: Parser MathElement
-parsePower = parseShortPower <|> parseLongPower
-
-parseShortPower :: Parser MathElement
-parseShortPower = try $ do
-    _ <- try $ char '^'
-    element <- parseMathElement
-    return $ Power [element]
-
-parseLongPower :: Parser MathElement
-parseLongPower = do
-    _ <- parseFuncName "^"
-    content <- parseList '{' '}' parseMathElement
-    case content of
-        [_] -> fail "For powers containing only one element, use ^element \
-            \notation, such as e ^x."
-        _ -> return $ Power content
-
-parseDerivativeContents :: Parser (MathElement, MathElement, Char)
-parseDerivativeContents = do
-    ofvar <- parseGreekMath <|> parseMathEnglishVar
-    wrt <- parseGreekMath <|> parseMathEnglishVar
-    degree <- parseSingleDigit
-    return (ofvar, wrt, degree)
-
-parsePartialDerivative :: Parser MathElement
-parsePartialDerivative = do
-    _ <- parseFuncName "pd"
-    (ofvar, wrt, degree) <- parseDerivativeContents
-    return $ PartialDerivative ofvar wrt degree
-
-parseOrdinaryDerivative :: Parser MathElement
-parseOrdinaryDerivative = do
-    _ <- parseFuncName "od"
-    (ofvar, wrt, degree) <- parseDerivativeContents
-    return $ OrdinaryDerivative ofvar wrt degree
-
-parseMixedPartialDerivative :: Parser MathElement
-parseMixedPartialDerivative = do
-    _ <- parseFuncName "pdMix"
-    wrt1 <- parseGreekMath <|> parseMathEnglishVar
-    degree1 <- parseSingleDigit
-    wrt2 <- parseGreekMath <|> parseMathEnglishVar
-    degree2 <- parseSingleDigit
-    wrt3 <- parseGreekMath <|> parseMathEnglishVar
-    degree3 <- parseSingleDigit
-    return $ MixedPartialDerivative wrt1 degree1 wrt2 degree2 wrt3 degree3
-
-parseSingleDigit :: Parser Char
-parseSingleDigit = do
-    d <- try digitChar
-    _ <- parseWhiteSpace
-    return d
-
-parseAbsolute :: Parser MathElement
-parseAbsolute = AbsoluteBracket <$> parseList '|' '|' parseMathElement
-
-parseNthRoot :: Parser MathElement
-parseNthRoot = do
-    _ <- parseFuncName "nthRoot"
-    n <- parseMathElement
-    content <- parseList '{' '}' parseMathElement
-    return $ NthRoot n content
-
-parseSqrt :: Parser MathElement
-parseSqrt = do
-    _ <- parseFuncName "sqrt"
-    content <- parseList '{' '}' parseMathElement
-    return $ Sqrt content
-
-parseGreekMath :: Parser MathElement
-parseGreekMath = parseBoldGreekMath <|> parseItalicGreekMath
-
-parseBoldGreekMath :: Parser MathElement
-parseBoldGreekMath = try $ do
-    _ <- try $ char '#'
-    greekCharString <- parseGreekCharString
-    return $ GreekMath BoldMath greekCharString
-
-parseItalicGreekMath :: Parser MathElement
-parseItalicGreekMath = try $ do
-    greekCharString <- parseGreekCharString
-    return $ GreekMath ItalicMath greekCharString
-
-parseGreekCharString :: Parser String
-parseGreekCharString = choice $ fmap parseFuncName greekMathVars
-
-greekMathVars :: [String]
-greekMathVars =
-    [ "alpha", "beta", "gamma", "Gamma", "delta", "Delta", "epsilon"
-    , "zeta", "eta", "theta", "Theta", "iota", "lambda", "Lambda" , "mu"
-    , "nu", "xi", "Xi", "pi", "Pi", "rho", "sigma", "Sigma", "tau"
-    , "upsilon", "Upsilon", "phi", "Phi", "chi", "psi", "Psi", "omega"
-    , "Omega"]
-
-parseMathNumbers :: Parser MathElement
-parseMathNumbers = do
-    numbers <- try $ some $ oneOf "0123456789."
-    parseWhiteSpace
-    return $ MathNumbers numbers
-
-parseMathOperatorChar :: Parser MathElement
-parseMathOperatorChar = do
-    character <- choice $ fmap parseCharFunc mathOperatorChars
-    return $ MathOperatorChar character
-
-mathOperatorChars :: String
-mathOperatorChars = "!=%-+\'<>.,;:@\"/"
-
-parseMathEnglishVar :: Parser MathElement
-parseMathEnglishVar = parseMathItalicChar <|> parseMathBoldChar
-
-parseMathItalicChar :: Parser MathElement
-parseMathItalicChar = try $ do
-    character <- parseMathEnglishChar
-    return $ MathEnglishVar ItalicMath character
-
-parseMathHollowChar :: Parser MathElement
-parseMathHollowChar =
-    parseFuncName "hollow" >> Hollow <$> parseMathEnglishCapitals
-
-parseMathBoldChar :: Parser MathElement
-parseMathBoldChar = try $ do
-    _ <- try $ char '#'
-    character <- parseMathEnglishChar
-    return $ MathEnglishVar BoldMath character
-
-parseMathEnglishChar :: Parser Char
-parseMathEnglishChar = try $ choice $ fmap parseCharFunc ordinaryMathChars
-
-parseMathEnglishCapitals :: Parser Char
-parseMathEnglishCapitals =
-    try $ choice $ parseCharFunc <$> "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-parseCharFunc :: Char -> Parser Char
-parseCharFunc character = try $ do
-    _ <- try $ char character
-    parseWhiteSpace
-    return character
-     
-parseMathOrdinaryText :: Parser MathElement
-parseMathOrdinaryText = fmap MathOrdinaryText parseTextContent
-
-ordinaryMathChars :: String
-ordinaryMathChars =
-    "abcdefghijklmnopqrstuvwxyz\
-    \ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-parseNumbered :: Parser Numbered
-parseNumbered = parseNumberOn <|> return NumberOff
-
-parseNumberOn :: Parser Numbered
-parseNumberOn = parseFuncName "num" >> fmap NumberOn parseId
-
-parseId :: Parser Id
-parseId = do
-    idCode <- try $ some $ oneOf idChars
-    parseWhiteSpace
-    return $ Id idCode 
-     
-idChars :: String
-idChars = 
-    "abcdefghijklmnopqrstuvwxyz\
-    \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-    \0123456789"
-
 parseText :: Parser Element
 parseText = fmap Text parseTextContent
-
-parseTextContent :: Parser String
-parseTextContent = try $ do
-    _ <- try $ char '`' 
-    beginningWhitespace <- string " " <|> return ""
-    mainContent <- fmap concat $ try $ some $ do
-        word <- parseWord
-        whiteSpace <- string " " <|> return ""
-        return $ word ++ whiteSpace
-    _ <- try $ char '`'
-    parseWhiteSpace
-    return $ beginningWhitespace ++ mainContent
-
-parseWord :: Parser String
-parseWord = try $ do
-    openQuote <- parseOpenQuote
-    word <- some $ parseWordChar <|> parseSpecialChar
-    return $ openQuote ++ concat word
-
-parseOpenQuote :: Parser String
-parseOpenQuote = try $
-    (try (char '\"') >> return "``") <|>
-    (try (char '\'') >> return "`") <|>
-    return ""
-
-parseWordChar :: Parser String
-parseWordChar = (: []) <$> oneOf wordChars
-
-wordChars :: String
-wordChars = 
-    "abcdefghijklmnopqrstuvwxyz\
-    \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
-    \01234567890\
-    \!\"£*()-+=[];:'@#,<.>/?|"
-
-parseSpecialChar :: Parser String
-parseSpecialChar = try $ choice
-    [ parseDollar
-    , parsePercentage
-    , parseUnderscore
-    , parseTilde
-    , parseBackslash
-    , parseAmpersand ]
-
-parseAmpersand :: Parser String
-parseAmpersand = try (char '&') >> return "\\&"
-
-parseDollar :: Parser String
-parseDollar = try (char '$') >> return "\\$"
-
-parsePercentage :: Parser String
-parsePercentage = try (char '%') >> return "\\%"
-
-parseUnderscore :: Parser String
-parseUnderscore = try (char '_') >> return "\\_"
-
-parseTilde :: Parser String
-parseTilde = try (char '_') >> return "\\textasciitilde "
-
-parseBackslash :: Parser String
-parseBackslash = try (char '\\') >> return "\\textbackslash "

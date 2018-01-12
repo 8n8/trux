@@ -14,7 +14,7 @@ main = do
       Left err -> putStrLn (parseErrorPretty err)
       Right latex -> do
           writeFile texfile latex
-          _ <- callProcess "latexmk" ["-pdf", "-interaction=nonstopmode", texfile, "-silent"]
+          _ <- callProcess "latexmk" ["-pdf", "-interaction=nonstopmode", texfile]
           return ()
 
 striptx :: String -> String
