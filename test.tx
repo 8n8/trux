@@ -15,7 +15,7 @@ ref basiljet
 `), observed over time, containing statistical noise and other inaccuracies, and produces estimates `
 math { 3 y + exp ( 42 x ^2 ) }
 p
-`Considering it a matter of delicacy to abstain from introducing either Bob Sawyer or Ben Allen to the young couple, until they were fully prepared to expect them; and wishing to spare Arabella's feelings as much as possible, Mr. Pickwick proposed that he and Sam should alight in the neighbourhood of the George and Vulture, and that the two young men should for the present take up their quarters elsewhere; to this they very readily agreed, and the proposition was accordingly acted upon: Mr. ben Allen and Mr. bob Sawyer betaking themselves to a sequestered pot-shop on the remotest confines of the Borough, behind the bar-door of which their names had in other days very often appeared, at the head of long and complex calculations worked in green chalk. Jennings walked down the road to see the cat sat on the mat. Darbishire was eating quietly. Behind the door, Mr. Wilkins was hiding surreptitiously.`
+`Considering it a matter of delicacy to abstain from introducing either Bob Sawyer or Ben Allen to the young couple, until they were fully prepared to expect them; and wishing to spare Arabella's feelings as much as possible, Mr. Pickwick proposed that he and Sam should alight in the neighbourhood of the George and Vulture, and that the two young men should for the present take up their quarters elsewhere; to this they very readily agreed, and the proposition was accordingly acted upon: Mr. ben Allen and Mr. bob Sawyer betaking themselves to a sequestered pot-shop on the remotest confines of the Borough, behind the bar-door of which their names had in other days very often appeared, at the head of long and complex calculations worked in green chalk. Jennings walked down the road to see the cat sat on the mat. Darbishire was eating quietly. Behind the door, Mr. Wilkins was hiding surreptitiously in equation ` ref hamish
 Math {
 equation { sqrt { 32 hat x ^3 } mod max min ( overline x underline x overArrow x ) }
 equation { nthRoot 3 { 45 } }
@@ -41,6 +41,6 @@ Math { equation { int { 3 x ^2 } Omega } }
 Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
 `Here are some ordinary derivatives:`
 Math {
-equation { od x y 1 _32 >= 100 <= 23 ~= 20 for { x in hollow R } }
+equation { od x y 9 _32 >= 100 <= 23 ~= 20 for { x in hollow C } }
 }
 }
