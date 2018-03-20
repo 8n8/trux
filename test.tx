@@ -43,4 +43,17 @@ Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
 Math {
 equation { od x y 9 _32 >= 100 <= 23 ~= 20 for { x in hollow C } }
 }
+`Here are some lovely matrices:`
+Math {
+equation { [
+matrix {
+{ { 3 x } { { 1 } / { 2 } } }
+{ { a b #c } { #Omega } } }
+]
 }
+}
+Math {
+equation num hamish { [ matrix {
+{ { 1 } { 2 } }
+{ { 3 } { 4 } } } ]
+} } } }

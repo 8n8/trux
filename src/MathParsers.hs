@@ -13,6 +13,7 @@ import CommonParsers
     )
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import Data.List (intersperse)
 
 math2Latex :: [MathElement] -> String
 math2Latex = concatMap mathElement2Latex
@@ -92,6 +93,23 @@ mathElement2Latex mathElement = case mathElement of
         , "}{"
         , [degree3]
         , "}" ]
+    Matrix contents ->
+        let
+          rowLen = length . head $ contents
+          alignments = take rowLen $ repeat 'c'
+        in concat
+          [ "\\begin{array}{"
+          , alignments
+          , "}"
+          , concat $ intersperse " \\\\ " $ map matrixRow2Latex contents
+          , "\\end{array}"
+          ]
+
+matrixRow2Latex :: [[MathElement]] -> String
+matrixRow2Latex = concat . intersperse " & " . map matrixElement2Latex
+
+matrixElement2Latex :: [MathElement] -> String
+matrixElement2Latex = concatMap mathElement2Latex
 
 derivDegree2Latex :: Char -> String
 derivDegree2Latex '1' = ""
@@ -157,7 +175,8 @@ data MathElement =
     OrdinaryDerivative MathElement MathElement Char |
     Condition [MathElement] |
     MixedPartialDerivative
-        MathElement Char MathElement Char MathElement Char
+        MathElement Char MathElement Char MathElement Char |
+    Matrix [[[MathElement]]]
     deriving Show
 
 data MathStyle = BoldMath | ItalicMath deriving Show
@@ -188,6 +207,7 @@ parseMathElement = choice
     , parseOrdinaryDerivative
     , parsePartialDerivative
     , parseMixedPartialDerivative
+    , parseMatrix
     , parseIntegral ]
 
 parseMathOrdinaryText :: Parser MathElement
@@ -325,6 +345,27 @@ parseFraction = do
 
 parseSubscript :: Parser MathElement
 parseSubscript = parseShortSubscript <|> parseLongSubscript
+
+parseMatrix :: Parser MathElement
+parseMatrix = do
+  _ <- parseFuncName "matrix"
+  content <- parseList '{' '}' $ parseList '{' '}' $
+    parseList '{' '}' parseMathElement
+  if rowsSameLength content then
+    return $ Matrix content
+  else
+    fail "Matrix rows must have equal lengths."
+
+rowsSameLength :: [[a]] -> Bool
+rowsSameLength [] = True
+rowsSameLength (a:b) =
+  let
+    firstLen = length a
+  in
+    all ((== firstLen) . length) b
+
+parseMatrixRow :: Parser [[MathElement]]
+parseMatrixRow = parseList '{' '}' $ parseList '{' '}' parseMathElement
 
 parseCurlyBracket :: Parser MathElement
 parseCurlyBracket = do
