@@ -13,3 +13,7 @@ I think I'm making things too hard here.  Latexmk can handle all the runs.  I ha
 Friday 5 January 2018
 
 The next thing on my list is making nice indentation.  I don't want it so that whitespace is ignored most of the time, like in C++ or Emacs Lisp, where you can put in 10 newlines and the compiler doesn't care.  I would like it to enforce a nice indentation scheme.  I feel like I need to start again actually.  It feels like a mess.
+
+Tuesday 20 March 2018
+
+I'm struggling to get the tables to work properly.  What I want is for the column widths to set themselves automatically.  The best I have found so far is tabularx, which sets them all the same width, and wraps the text if it is too long.  That is not too bad, but when it is a small table you just want it to fit the column size to the contents.  However, I think that it will do for now.

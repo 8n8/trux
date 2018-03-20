@@ -52,8 +52,16 @@ matrix {
 ]
 }
 }
+`The 'are you?' crowd are really there (see ` ref hoppy `).`
 Math {
-equation num hamish { [ matrix {
+equation num hamishe { [ matrix {
 { { 1 } { 2 } }
 { { 3 } { 4 } } } ]
-} } } }
+} }
+table hoppy { `A fabulous table ` math { a b #d } } {
+{ { `is this` } { `something there` } { `True is here` } }
+{ { `are you ` math { x } ` not` } { `bottled water` } { `1` } }
+{ { `why is the` } { `houseKeeper` } { `333` } }
+}
+`what shall we do with the drunken sailor, what shall we do with the drunken sailer, what shall we do with the drunken sailor early in the morning`
+}

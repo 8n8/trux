@@ -1,6 +1,6 @@
 module Parser ( parse2Latex ) where
 
-import CommonParsers 
+import CommonParsers
     ( Id ( Id )
     , Numbered (NumberOff, NumberOn)
     , Parser
@@ -10,14 +10,17 @@ import CommonParsers
     , parseList
     , parseNumbered
     , parseTextContent
+    , rowsSameLength
     )
-import MathParsers 
+import Data.List (intersperse, transpose, findIndices, sort)
+import MathParsers
     ( parseInlineMath
     , Math
     , math2latex
     , parseDisplayMath )
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import Text.Read (readMaybe)
 
 bracket1 :: Char
 bracket1 = '{'
@@ -32,10 +35,13 @@ preamble =
     \\\usepackage{amsmath}\n\
     \\\usepackage{amsfonts}\n\
     \\\usepackage{bm}\n\
+    \\\usepackage{float}\n\
     \\\usepackage{textcomp}\n\
     \\\usepackage{commath}\n\
+    \\\usepackage{siunitx}\n\
     \\\usepackage[official]{eurosym}\n\
     \\\frenchspacing\n\
+    \\\usepackage{booktabs}\n\
     \\\usepackage{breqn}\n\
     \\\usepackage{cleveref}\n\
     \\\creflabelformat{equation}{#2#1#3}\n\
@@ -63,10 +69,67 @@ element2latex :: Element -> String
 element2latex element = case element of
     Text text -> text
     MathElement contents -> math2latex contents
-    Header numbered level elements -> header2latex numbered level elements 
+    Header numbered level elements -> header2latex numbered level elements
     CrossReference (Id idCode) -> concat [ "\\cref{", idCode, "}" ]
     Umlaut character -> ['\\', '\"', character]
     ElementSimpleSub symbol -> symbol
+    Table (Id idCode) caption contents -> concat
+        [ "\\begin{table}[H]\\centering"
+        , "\\begin{tabular}{"
+        , tableAlignStr contents
+        , "}\\toprule "
+        , tableHeader2Latex $ head contents
+        , " \\\\\\midrule "
+        , concat $ intersperse " \\\\ " $ map tableRow2Latex $ tail contents
+        , "\\\\\\bottomrule "
+        , "\\end{tabular}"
+        , "\\caption{"
+        , concatMap element2latex caption
+        , "}"
+        , "\\label{"
+        , idCode
+        , "}"
+        , "\\end{table}"
+        ]
+
+tableAlignStr :: [[[Element]]] -> String
+tableAlignStr table =
+  let
+    numIndices = sort $ numColIndices table
+    lenRow = length $ head table
+  in
+    concat $ take lenRow $ map (insertDecimalAlign numIndices) [0..]
+
+insertDecimalAlign :: [Int] -> Int -> String
+insertDecimalAlign numIndices i =
+  if elem i numIndices then
+    "S[table-text-alignment=left]"
+  else
+    "l"
+
+numColIndices :: [[[Element]]] -> [Int]
+numColIndices =
+  findIndices (== True) . map (and . map isNum) . transpose . tail
+
+isNum :: [Element] -> Bool
+isNum [Text str] =
+  case readMaybe str :: Maybe Float of
+    Nothing -> False
+    Just _ -> True
+isNum _ = False
+
+tableHeader2Latex :: [[Element]] -> String
+tableHeader2Latex row = concat
+  [ "{"
+  , concat . intersperse "} & {" . map tableElement2Latex $ row
+  , "}"
+  ]
+
+tableRow2Latex :: [[Element]] -> String
+tableRow2Latex = concat . intersperse " & " . map tableElement2Latex
+
+tableElement2Latex :: [Element] -> String
+tableElement2Latex = concatMap element2latex
 
 header2latex :: Numbered -> HeaderLevel -> [Element] -> String
 header2latex numbered level elements = concat
@@ -85,7 +148,7 @@ header2latex numbered level elements = concat
         NumberOn (Id idCode) -> concat [ "\\label{", idCode, "}" ]
         NumberOff -> ""
     ]
-    
+
 docHeader2latex :: Maybe DocHeader -> String
 docHeader2latex Nothing = ""
 docHeader2latex (Just (DocHeader title author date)) =
@@ -122,15 +185,15 @@ newtype Date = Date [Element] deriving Show
 
 newtype DocumentBody = DocumentBody [Element] deriving Show
 
-data Element =
-    Text String |
-    MathElement Math |
-    Header Numbered HeaderLevel [Element] |
-    CrossReference Id |
-    Umlaut Char |
-    ElementSimpleSub String
+data Element
+  = Text String
+  | MathElement Math
+  | Header Numbered HeaderLevel [Element]
+  | CrossReference Id
+  | Umlaut Char
+  | ElementSimpleSub String
+  | Table Id [Element] [[[Element]]]
     deriving Show
-
 
 newtype Title = Title [Element] deriving Show
 
@@ -152,7 +215,7 @@ simpleElementSubs =
 
 parseUmlaut :: Parser Element
 parseUmlaut = do
-    _ <- try $ char '\"' 
+    _ <- try $ char '\"'
     character <- choice $ parseCharFunc <$>
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     return $ Umlaut character
@@ -180,7 +243,7 @@ parseDocHeader =
         return $ Just $ DocHeader title author date) <|>
     return Nothing
 
-parseBody :: Parser DocumentBody 
+parseBody :: Parser DocumentBody
 parseBody = do
     _ <- parseFuncName "body"
     body <- parseList bracket1 bracket2 parseElement
@@ -201,14 +264,16 @@ parseAuthor =
     return Nothing
 
 parseElement :: Parser Element
-parseElement = choice 
+parseElement = choice
     [ parseText
     , MathElement <$> parseDisplayMath
     , MathElement <$> parseInlineMath
     , parseHeader
     , parseCrossReference
     , parseElementSimpleSub
-    , parseUmlaut ]
+    , parseUmlaut
+    , parseTable
+    ]
 
 parseCrossReference :: Parser Element
 parseCrossReference = do
@@ -218,13 +283,28 @@ parseCrossReference = do
 
 data HeaderLevel = HeaderOne | HeaderTwo | HeaderThree deriving Show
 
+parseTable :: Parser Element
+parseTable = do
+  _ <- parseFuncName "table"
+  idCode <- parseId
+  caption <- parseList '{' '}' parseHeaderElement
+  content <- parseList '{' '}' $ parseList '{' '}' $
+    parseList '{' '}' parseElement
+  if rowsSameLength content then
+    if length content > 1 then
+      return $ Table idCode caption content
+    else
+      fail "Table must have at least two rows."
+  else
+    fail "Table rows must have equal length."
+
 parseHeaderLevel :: Parser HeaderLevel
 parseHeaderLevel =
     parseHeader1Level <|> parseHeader2Level <|> parseHeader3Level
 
 parseHeader1Level :: Parser HeaderLevel
 parseHeader1Level = parseFuncName "1" >> return HeaderOne
- 
+
 parseHeader2Level :: Parser HeaderLevel
 parseHeader2Level = parseFuncName "2" >> return HeaderTwo
 

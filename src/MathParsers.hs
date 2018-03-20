@@ -10,6 +10,7 @@ import CommonParsers
     , parseNumbered
     , parseTextContent
     , parseWhiteSpace
+    , rowsSameLength
     )
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -355,14 +356,6 @@ parseMatrix = do
     return $ Matrix content
   else
     fail "Matrix rows must have equal lengths."
-
-rowsSameLength :: [[a]] -> Bool
-rowsSameLength [] = True
-rowsSameLength (a:b) =
-  let
-    firstLen = length a
-  in
-    all ((== firstLen) . length) b
 
 parseMatrixRow :: Parser [[MathElement]]
 parseMatrixRow = parseList '{' '}' $ parseList '{' '}' parseMathElement

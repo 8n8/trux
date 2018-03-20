@@ -7,9 +7,17 @@ import Text.Megaparsec.Char
 
 type Parser = Parsec Void String
 
+rowsSameLength :: [[a]] -> Bool
+rowsSameLength [] = True
+rowsSameLength (a:b) =
+  let
+    firstLen = length a
+  in
+    all ((== firstLen) . length) b
+
 parseTextContent :: Parser String
 parseTextContent = do
-    _ <- try $ char '`' 
+    _ <- try $ char '`'
     beginningWhitespace <- string " " <|> return ""
     mainContent <- fmap concat $ some $ do
         word <- parseWord
@@ -47,7 +55,7 @@ parseWordChar :: Parser String
 parseWordChar = (: []) <$> oneOf wordChars
 
 wordChars :: String
-wordChars = 
+wordChars =
     "abcdefghijklmnopqrstuvwxyz\
     \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
     \01234567890\
@@ -61,7 +69,7 @@ parseDecimal = try $ do
     _ <- try $ char '.'
     _ <- notFollowedBy parseWhiteSpace
     return "."
-    
+
 parseDollar :: Parser String
 parseDollar = try (char '$') >> return "\\$"
 
@@ -109,10 +117,10 @@ parseId :: Parser Id
 parseId = do
     idCode <- try $ some $ oneOf idChars
     parseWhiteSpace
-    return $ Id idCode 
-     
+    return $ Id idCode
+
 idChars :: String
-idChars = 
+idChars =
     "abcdefghijklmnopqrstuvwxyz\
     \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
     \0123456789"
