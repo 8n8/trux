@@ -32,8 +32,10 @@ preamble :: String
 preamble =
     "\\documentclass{article}\n\
     \\\usepackage[utf8]{inputenc}\n\
+    \\\usepackage[hidelinks]{hyperref}\n\
     \\\usepackage{amsmath}\n\
     \\\usepackage{amsfonts}\n\
+    \\\usepackage{graphicx}\n\
     \\\usepackage{bm}\n\
     \\\usepackage{float}\n\
     \\\usepackage{textcomp}\n\
@@ -74,22 +76,28 @@ element2latex element = case element of
     Umlaut character -> ['\\', '\"', character]
     ElementSimpleSub symbol -> symbol
     Table (Id idCode) caption contents -> concat
-        [ "\\begin{table}[H]\\centering"
-        , "\\begin{tabular}{"
+        [ "\n\\begin{table}[H]\\centering \\begin{tabular}{"
         , tableAlignStr contents
         , "}\\toprule "
         , tableHeader2Latex $ head contents
         , " \\\\\\midrule "
         , concat $ intersperse " \\\\ " $ map tableRow2Latex $ tail contents
-        , "\\\\\\bottomrule "
-        , "\\end{tabular}"
-        , "\\caption{"
+        , "\\\\\\bottomrule \\end{tabular} \\caption{"
         , concatMap element2latex caption
-        , "}"
-        , "\\label{"
+        , "} \\label{"
         , idCode
-        , "}"
-        , "\\end{table}"
+        , "} \\end{table}"
+        ]
+    Image (Id idCode) width caption filename -> concat
+        [ "\n\\begin{figure}[H]\\centering \\includegraphics[width="
+        , show width
+        , "\\textwidth]{"
+        , filename
+        , "} \\caption{"
+        , concatMap element2latex caption
+        , "} \\label{"
+        , idCode
+        , "} \\end{figure}"
         ]
 
 tableAlignStr :: [[[Element]]] -> String
@@ -193,6 +201,7 @@ data Element
   | Umlaut Char
   | ElementSimpleSub String
   | Table Id [Element] [[[Element]]]
+  | Image Id Float [Element] String
     deriving Show
 
 newtype Title = Title [Element] deriving Show
@@ -273,6 +282,7 @@ parseElement = choice
     , parseElementSimpleSub
     , parseUmlaut
     , parseTable
+    , parseImage
     ]
 
 parseCrossReference :: Parser Element
@@ -282,6 +292,19 @@ parseCrossReference = do
     return $ CrossReference idCode
 
 data HeaderLevel = HeaderOne | HeaderTwo | HeaderThree deriving Show
+
+parseImage :: Parser Element
+parseImage = do
+  _ <- parseFuncName "image"
+  idCode <- parseId
+  widthStr <- parseTextContent
+  case readMaybe widthStr :: Maybe Float of
+    Nothing -> fail
+      "The width argument to 'image' must be a number between 0 and 1."
+    Just width -> do
+      caption <- parseList '{' '}' parseHeaderElement
+      filename <- parseTextContent
+      return $ Image idCode width caption filename
 
 parseTable :: Parser Element
 parseTable = do
