@@ -9,12 +9,21 @@ main :: IO ()
 main = do
   filepath <- fmap head getArgs
   filecontents <- readFile filepath
-  let texfile = (striptx filepath) ++ ".tex"
+  let fileRoot = (striptx filepath)
   case parse parse2Latex filepath filecontents of
       Left err -> putStrLn (parseErrorPretty err)
       Right latex -> do
-          writeFile texfile latex
-          _ <- callProcess "latexmk" ["-pdf", "-interaction=nonstopmode", texfile]
+          writeFile (fileRoot ++ ".Rnw") latex
+          _ <- callProcess "R"
+              [ "-e"
+              , concat
+                  [ "'library(knitr);library(tikzDevice);knit(\""
+                  , fileRoot
+                  , ".Rnw\")'"
+                  ]
+              ]
+          _ <- callProcess "latexmk"
+              ["-pdf", "-interaction=nonstopmode", fileRoot ++ ".tex"]
           return ()
 
 striptx :: String -> String
