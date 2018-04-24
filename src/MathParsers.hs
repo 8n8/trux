@@ -116,7 +116,6 @@ derivDegree2Latex :: Char -> String
 derivDegree2Latex '1' = ""
 derivDegree2Latex degree = [ '[', degree, ']' ]
 
-
 inlineMath2latex :: [MathElement] -> String
 inlineMath2latex elements =
     concat [ "$", concatMap mathElement2Latex elements, "$" ]
@@ -152,6 +151,7 @@ equation2latex (DisplayMathLine numbered elements) = case numbered of
 
 data MathElement =
     MathOrdinaryText String |
+    MathUnit SiUnit |
     MathEnglishVar MathStyle Char |
     Hat MathElement |
     Overline MathElement |
@@ -185,6 +185,7 @@ data MathStyle = BoldMath | ItalicMath deriving Show
 parseMathElement :: Parser MathElement
 parseMathElement = choice
     [ parseMathOrdinaryText
+    , parseUnit
     , parseMathOperatorChar
     , parseHat
     , parseOverline
@@ -210,6 +211,8 @@ parseMathElement = choice
     , parseMixedPartialDerivative
     , parseMatrix
     , parseIntegral ]
+
+parseUnit :: Parser MathElement
 
 parseMathOrdinaryText :: Parser MathElement
 parseMathOrdinaryText = fmap MathOrdinaryText parseTextContent
