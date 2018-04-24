@@ -1,4 +1,5 @@
 *
+!pic.jpg
 !.gitignore
 !LICENSE
 !package.yaml
@@ -12,3 +13,4 @@
 !log.txt
 !test.tx
 !todo.txt
+!ref.bib

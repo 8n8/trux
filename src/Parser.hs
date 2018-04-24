@@ -35,6 +35,8 @@ preamble =
     \\\usepackage[hidelinks]{hyperref}\n\
     \\\usepackage{amsmath}\n\
     \\\usepackage{amsfonts}\n\
+    \\\usepackage[style=authoryear]{biblatex}\n\
+    \\\bibliography{ref}\n\
     \\\usepackage{graphicx}\n\
     \\\usepackage{bm}\n\
     \\\usepackage{float}\n\
@@ -58,7 +60,12 @@ doc2latex (Document header body) =
 
 body2latex :: Maybe DocHeader -> DocumentBody -> String
 body2latex header (DocumentBody elements) =
-    unlines ["\\begin{document}", maketitle, body, "\\end{document}"]
+    unlines
+      [ "\\begin{document}"
+      , maketitle
+      , body
+      , "\\printbibliography \\end{document}"
+      ]
   where
     body :: String
     body = concatMap element2latex elements
@@ -98,6 +105,14 @@ element2latex element = case element of
         , "} \\label{"
         , idCode
         , "} \\end{figure}"
+        ]
+    Citation (Id idCode) -> concat [ "\\cite{", idCode, "}" ]
+    R options code -> concat
+        [ "<<"
+        , options
+        , ">>=\n"
+        , code
+        , "@\n"
         ]
 
 tableAlignStr :: [[[Element]]] -> String
@@ -198,10 +213,12 @@ data Element
   | MathElement Math
   | Header Numbered HeaderLevel [Element]
   | CrossReference Id
+  | Citation Id
   | Umlaut Char
   | ElementSimpleSub String
   | Table Id [Element] [[[Element]]]
   | Image Id Float [Element] String
+  | R String String
     deriving Show
 
 newtype Title = Title [Element] deriving Show
@@ -279,11 +296,18 @@ parseElement = choice
     , MathElement <$> parseInlineMath
     , parseHeader
     , parseCrossReference
+    , parseCitation
     , parseElementSimpleSub
     , parseUmlaut
     , parseTable
     , parseImage
     ]
+
+parseCitation :: Parser Element
+parseCitation = do
+  _ <- parseFuncName "cite"
+  idCode <- parseId
+  return $ Citation idCode
 
 parseCrossReference :: Parser Element
 parseCrossReference = do

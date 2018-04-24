@@ -13,15 +13,7 @@ main = do
   case parse parse2Latex filepath filecontents of
       Left err -> putStrLn (parseErrorPretty err)
       Right latex -> do
-          writeFile (fileRoot ++ ".Rnw") latex
-          _ <- callProcess "R"
-              [ "-e"
-              , concat
-                  [ "'library(knitr);library(tikzDevice);knit(\""
-                  , fileRoot
-                  , ".Rnw\")'"
-                  ]
-              ]
+          writeFile (fileRoot ++ ".tex") latex
           _ <- callProcess "latexmk"
               ["-pdf", "-interaction=nonstopmode", fileRoot ++ ".tex"]
           return ()

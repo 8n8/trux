@@ -61,8 +61,8 @@ equation num hamishe { [ matrix {
 table hoppy { `A fabulous table ` math { a b #d } } {
 { { `is this` } { `something there` } { `True is here` } }
 { { `are you ` math { x } ` not` } { `bottled water` } { `1` } }
-{ { `why is the` } { `houseKeeper` } { `333` } }
+{ { `why is the` } { `houseKeeper` } { `333.3` } }
 }
-`what shall wed do with the drunken sailor, (see ` ref hip `) what shall we do with the drunken sailer, what shall we do with the drunken sailor early in the morning`
+`what shall wed do with the drunken sailor, (see ` ref hip `) what shall we do with the drunken sailer, what (` cite arrow48 `) shall we do with the drunken sailor early in the morning`
 image hip `0.5` { `pretty picture` } `pic.jpg`
 }
