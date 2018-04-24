@@ -3,7 +3,7 @@ module MathParsers where
 import CommonParsers
     ( Id ( Id )
     , Numbered ( NumberOff, NumberOn )
-    , Parser 
+    , Parser
     , parseCharFunc
     , parseFuncName
     , parseList
@@ -21,7 +21,7 @@ math2Latex = concatMap mathElement2Latex
 
 mathElement2Latex :: MathElement -> String
 mathElement2Latex mathElement = case mathElement of
-    MathOrdinaryText text -> concat ["\\textrm{", text, "}"] 
+    MathOrdinaryText text -> concat ["\\textrm{", text, "}"]
     MathEnglishVar BoldMath var -> concat ["\\bm{", [var], "}"]
     MathEnglishVar ItalicMath var -> [var]
     MathOperatorChar operator -> [operator]

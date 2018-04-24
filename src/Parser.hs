@@ -32,6 +32,7 @@ preamble :: String
 preamble =
     "\\documentclass{article}\n\
     \\\usepackage[utf8]{inputenc}\n\
+    \\\usepackage{microtype}\n\
     \\\usepackage[hidelinks]{hyperref}\n\
     \\\usepackage{amsmath}\n\
     \\\usepackage{amsfonts}\n\
@@ -195,7 +196,7 @@ date2latex (Just (Date headerElements)) = concat
     [ "\\date{"
     , headerElements2Latex headerElements
     , "}" ]
-date2latex Nothing = ""
+date2latex Nothing = "\\date{}"
 
 headerElements2Latex :: [Element] -> String
 headerElements2Latex = concatMap element2latex
