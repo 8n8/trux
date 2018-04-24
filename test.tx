@@ -42,7 +42,7 @@ Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
 `Here are some ordinary derivatives:`
 Math {
 equation { od x y 9 _32 >= 100 <= 23 ~= 20 for { x in hollow C } }
-}
+}    
 `Here are some lovely matrices:`
 Math {
 equation { [
@@ -62,6 +62,7 @@ table hoppy { `A fabulous table ` math { a b #d } } {
 { { `is this` } { `something there` } { `True is here` } }
 { { `are you ` math { x } ` not` } { `bottled water` } { `1` } }
 { { `why is the` } { `houseKeeper` } { `333.3` } }
+{ { } { } { `onion` } }
 }
 `what shall wed do with the drunken sailor, (see ` ref hip `) what shall we do with the drunken sailer, what (` cite arrow48 `) shall we do with the drunken sailor early in the morning`
 image hip `0.5` { `pretty picture` } `pic.jpg`

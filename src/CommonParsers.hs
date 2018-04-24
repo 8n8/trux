@@ -27,8 +27,11 @@ parseTextContent = do
     parseWhiteSpace
     return $ beginningWhitespace ++ mainContent
 
+parseOneWhiteSpace :: Parser ()
+parseOneWhiteSpace = void (try $ char ' ') <|> void (try newline)
+
 parseWhiteSpace :: Parser ()
-parseWhiteSpace = void (try $ char ' ') <|> void (try newline)
+parseWhiteSpace = void $ some parseOneWhiteSpace
 
 parseWord :: Parser String
 parseWord = try $ do
@@ -89,7 +92,7 @@ parseList :: (Show c) => Char -> Char -> Parser c -> Parser [c]
 parseList startChar stopChar parseItem = do
     _ <- try $ char startChar
     parseWhiteSpace
-    content <- try $ some parseItem
+    content <- try $ many parseItem
     _ <- try $ char stopChar
     parseWhiteSpace
     return content
