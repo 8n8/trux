@@ -11,6 +11,6 @@
 !stack.yaml
 !*.hs
 !log.txt
-!test.tx
+!*.tx
 !todo.txt
 !ref.bib
