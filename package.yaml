@@ -10,13 +10,13 @@ dependencies:
   - base >= 4.7 && < 5
   - megaparsec
   - process
+  - directory
 
 executables:
   trux:
     main: Main.hs
     source-dirs:
       - src 
-      - app
 
 tests:
   spec:

@@ -150,34 +150,34 @@ equation2latex (DisplayMathLine numbered elements) = case numbered of
   where
     mathContents = concatMap mathElement2Latex elements
 
-data MathElement =
-    MathOrdinaryText String |
-    MathEnglishVar MathStyle Char |
-    Hat MathElement |
-    Overline MathElement |
-    OverArrow MathElement |
-    Underline MathElement |
-    Hollow Char |
-    SimpleSubstitution String |
-    MathOperatorChar Char |
-    MathNumbers String |
-    GreekMath MathStyle String |
-    Sqrt [MathElement] |
-    NthRoot MathElement [MathElement] |
-    Power [MathElement] |
-    Fraction [MathElement] [MathElement] |
-    Subscript [MathElement] |
-    CurlyBracket [MathElement] |
-    CurvedBracket [MathElement] |
-    SquareBracket [MathElement] |
-    AbsoluteBracket [MathElement] |
-    Integral [MathElement] MathElement |
-    PartialDerivative MathElement MathElement Char |
-    OrdinaryDerivative MathElement MathElement Char |
-    Condition [MathElement] |
-    MixedPartialDerivative
-        MathElement Char MathElement Char MathElement Char |
-    Matrix [[[MathElement]]]
+data MathElement
+  = MathOrdinaryText String
+  | MathEnglishVar MathStyle Char
+  | Hat MathElement
+  | Overline MathElement
+  | OverArrow MathElement
+  | Underline MathElement
+  | Hollow Char
+  | SimpleSubstitution String
+  | MathOperatorChar Char
+  | MathNumbers String
+  | GreekMath MathStyle String
+  | Sqrt [MathElement]
+  | NthRoot MathElement [MathElement]
+  | Power [MathElement]
+  | Fraction [MathElement] [MathElement]
+  | Subscript [MathElement]
+  | CurlyBracket [MathElement]
+  | CurvedBracket [MathElement]
+  | SquareBracket [MathElement]
+  | AbsoluteBracket [MathElement]
+  | Integral [MathElement] MathElement
+  | PartialDerivative MathElement MathElement Char
+  | OrdinaryDerivative MathElement MathElement Char
+  | Condition [MathElement]
+  | MixedPartialDerivative
+        MathElement Char MathElement Char MathElement Char
+  | Matrix [[[MathElement]]]
     deriving Show
 
 data MathStyle = BoldMath | ItalicMath deriving Show
