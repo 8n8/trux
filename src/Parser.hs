@@ -108,13 +108,6 @@ element2latex element = case element of
         , "} \\end{figure}"
         ]
     Citation (Id idCode) -> concat [ "\\cite{", idCode, "}" ]
-    R options code -> concat
-        [ "<<"
-        , options
-        , ">>=\n"
-        , code
-        , "@\n"
-        ]
 
 tableAlignStr :: [[[Element]]] -> String
 tableAlignStr table =
@@ -219,7 +212,6 @@ data Element
   | ElementSimpleSub String
   | Table Id [Element] [[[Element]]]
   | Image Id Float [Element] String
-  | R String String
     deriving Show
 
 newtype Title = Title [Element] deriving Show
