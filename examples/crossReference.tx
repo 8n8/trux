@@ -1,0 +1,4 @@
+body {
+`It is well-known that ` math { x = 2 } ` (see ` ref someRef `). Breakfast met certainty and fulfilled propriety led. Waited get either are wooded little her. Contrasted unreserved as mr particular collecting it everything as indulgence. Seems ask meant merry could put.`
+Math { equation num someRef { x = 2 } }
+}

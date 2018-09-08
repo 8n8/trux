@@ -1,0 +1,7 @@
+body {
+Math {
+equation num someRef1 { x = 23 z ^6 }
+equation { b ^6 - 48 #Omega = 5 }
+equation num anotherRef { q r >= 56733 }
+}
+}

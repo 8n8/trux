@@ -89,6 +89,22 @@ body {
 
 ![bold](examples/bold.png)
 
+## Section headings
+
+There are three levels of section headings available.  Sections can be numbered or not.  If they are numbered then they have a reference string that can be used internally to make cross-references.
+
+```
+body {
+header 1 { `Behind sooner dining so window` }
+`Certainty determine at of arranging perceived situation or. Or wholly pretty county in oppose. Favour met itself wanted settle put garret twenty. In astonished apartments resolution so an it. Unsatiable on by contrasted to reasonable companions an. On otherwise no admitting to suspicion furniture it.`
+header 2 num someUniqueRef23 { `Resources agreement contained` }
+`Denote simple fat denied add worthy little use. As some he so high down am week. Conduct esteems by cottage to pasture we winding. On assistance he cultivated considered frequently. Person how having tended direct own day man. Saw sufficient indulgence one own you inquietude sympathize.`
+header 3 { `Sudden she` }
+`Difficulty on insensible reasonable in. From as went he they. Preference themselves me as thoroughly partiality considered on in estimating. Middletons acceptance discovered projecting so is so or. In or attachment inquietude remarkably comparison at an. Is surrounded prosperous stimulated am me discretion expression. But truth being state can she china widow. Occasional preference fat remarkably now projecting uncommonly dissimilar (see ` ref someUniqueRef23 `).`
+}
+```
+
+![sections](examples/sections.png)
 
 ## Insert an image into the document
 
@@ -108,7 +124,7 @@ image ref23 `0.5` { `A sunflower` } `sunflower.jpg`
 
 ## Tables
 
-Make a simple table.
+Make a simple table.  'someref3' is a made up string of characters and numbers that can be used elswhere in the document when making cross-references.
 
 ```
 body {
@@ -202,7 +218,7 @@ Math { equation { #a #b #c #d #z #Z #omega #Omega #pi #Pi } }
 
 ```
 body {
-Math { equation { od x y 1 od x y 3 od a b 5 od omega psi 4 } }
+Math { equation { od x y 1 od x y 3 od a b 5 od omega psi 4 dif x dif y dif a } }
 }
 ```
 
@@ -288,9 +304,11 @@ Math { equation {
 
 ### Trig symbols
 
+```
 body {
 Math { equation { sin cos tan sinh cosh tanh } }
 }
+```
 
 ![trig](trig.png)
 
@@ -313,6 +331,22 @@ math { exp log ln * star <= >= ~= != mod max min +- sqrt { x ^2 + 3 y } nthRoot 
 ```
 
 ![otherMath](examples/otherMath.png)
+
+### Equation numbers
+
+Add reference numbers to a display-mode equation.  'someRef1' and 'anotherRef' are made-up strings of numbers and letters that can be used to make cross-references to the equations from other places in the document.
+
+```
+body {
+Math {
+equation num someRef1 { x = 23 z ^6 }
+equation { b ^6 - 48 #Omega = 5 }
+equation num anotherRef { q r >= 56733 }
+}
+}
+```
+
+![eqNum](examples/eqNum.png)
 
 ## Citations
 
@@ -388,3 +422,16 @@ In the paragraph it looks like this:
 And at the bottom of the page is the footnote:
 
 ![footnote](examples/footnotes2.png)
+
+## Cross-references
+
+It is possible to make links within the document to anything that has a reference code, like equations, tables, images and sections.
+
+```
+body {
+`It is well-known that ` math { x = 2 } ` (see ` ref someRef `). Breakfast met certainty and fulfilled propriety led. Waited get either are wooded little her. Contrasted unreserved as mr particular collecting it everything as indulgence. Seems ask meant merry could put.`
+Math { equation num someRef { x = 2 } }
+}
+```
+
+![cross-references](examples/crossReference.png)
