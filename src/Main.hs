@@ -7,10 +7,50 @@ import Text.Megaparsec ( parse, parseErrorPretty )
 import System.Directory ( removeFile )
 import System.IO.Error ( isDoesNotExistError )
 import Control.Exception ( catch, throwIO )
+import qualified System.FSNotify as Fsn
+import Control.Concurrent (threadDelay)
+import Control.Monad (forever)
 
 main :: IO ()
 main = do
   filepath <- fmap head getArgs
+  let container = containingDir filepath
+  _ <- Fsn.withManager $ \mgr -> do
+    _ <- Fsn.watchDir
+        mgr
+        container
+        (predicate filepath) 
+        (runOnce filepath)
+    forever $ threadDelay 1000000
+  return ()
+
+containingDir :: String -> String
+containingDir filePath =
+    let
+        f :: String -> String
+        f "" = "."
+        f ('/' : rs) = rs
+        f (_:rs) = f rs
+    in
+        reverse . f . reverse $ filePath
+
+fileName :: String -> String
+fileName filePath =
+    let
+        f :: String -> String -> String
+        f "" filename = reverse filename
+        f ('/':_) filename = filename
+        f (c:cs) filename = f cs (c:filename)
+    in
+        f (reverse filePath) ""
+
+predicate :: String -> Fsn.Event -> Bool
+predicate filePath (Fsn.Modified fpModified _) =
+    (fileName fpModified) == filePath
+predicate _ _ = False
+
+runOnce :: String -> Fsn.Event -> IO ()
+runOnce filepath _ = do
   filecontents <- readFile filepath
   let fileRoot = (striptx filepath)
   case parse parse2Latex filepath filecontents of

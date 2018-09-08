@@ -11,6 +11,8 @@ dependencies:
   - megaparsec
   - process
   - directory
+  - fsnotify
+  - system-filepath
 
 executables:
   trux:

@@ -78,6 +78,8 @@ body2latex header (DocumentBody elements) =
 element2latex :: Element -> String
 element2latex element = case element of
     Text text -> text
+    Italic text -> concat ["\\textit{", text, "}"]
+    Footnote elements -> footnote2latex elements
     MathElement contents -> math2latex contents
     Header numbered level elements -> header2latex numbered level elements
     CrossReference (Id idCode) -> concat [ "\\cref{", idCode, "}" ]
@@ -148,6 +150,14 @@ tableRow2Latex = concat . intersperse " & " . map tableElement2Latex
 tableElement2Latex :: [Element] -> String
 tableElement2Latex = concatMap element2latex
 
+
+footnote2latex :: [Element] -> String
+footnote2latex elements = concat
+    [ "\\footnote{"
+    , concatMap element2latex elements
+    , "}"
+    ]
+
 header2latex :: Numbered -> HeaderLevel -> [Element] -> String
 header2latex numbered level elements = concat
     [ "\\"
@@ -204,6 +214,7 @@ newtype DocumentBody = DocumentBody [Element] deriving Show
 
 data Element
   = Text String
+  | Italic String
   | MathElement Math
   | Header Numbered HeaderLevel [Element]
   | CrossReference Id
@@ -212,6 +223,7 @@ data Element
   | ElementSimpleSub String
   | Table Id [Element] [[[Element]]]
   | Image Id Float [Element] String
+  | Footnote [Element]
     deriving Show
 
 newtype Title = Title [Element] deriving Show
@@ -285,6 +297,7 @@ parseAuthor =
 parseElement :: Parser Element
 parseElement = choice
     [ parseText
+    , parseItalic
     , MathElement <$> parseDisplayMath
     , MathElement <$> parseInlineMath
     , parseHeader
@@ -294,7 +307,13 @@ parseElement = choice
     , parseUmlaut
     , parseTable
     , parseImage
+    , parseFootnote
     ]
+
+parseItalic :: Parser Element
+parseItalic = do
+  _ <- parseFuncName "i"
+  fmap Italic parseTextContent
 
 parseCitation :: Parser Element
 parseCitation = do
@@ -358,6 +377,21 @@ parseHeader = do
     numbered <- parseNumbered
     header <- parseList bracket1 bracket2 parseHeaderElement
     return $ Header numbered headerLevel header
+
+parseFootnote :: Parser Element
+parseFootnote = do
+    _ <- parseFuncName "footnote"
+    footnote <- parseList bracket1 bracket2 parseFootnoteElement
+    return $ Footnote footnote
+
+parseFootnoteElement :: Parser Element
+parseFootnoteElement = choice
+    [ parseText
+    , MathElement <$> parseInlineMath
+    , MathElement <$> parseDisplayMath
+    , parseCrossReference
+    , parseItalic
+    , parseUmlaut ]
 
 parseHeaderElement :: Parser Element
 parseHeaderElement = choice
