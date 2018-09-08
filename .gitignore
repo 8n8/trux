@@ -16,3 +16,4 @@ Main.elm
 .stack-work/
 nusrc/*
 examples/*.pdf
+*.swp
