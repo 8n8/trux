@@ -257,3 +257,84 @@ Math { equation {
 ```
 
 ![brackets](examples/brackets.png)
+
+### Ordinary text inside equation
+
+```
+body {
+Math { equation { a + b + c = 3 ` some ordinary text` } }
+}
+```
+
+![ordinary text in equation](examples/mathText.png)
+
+### Matrices and vectors
+
+```
+body {
+Math { equation {
+[ matrix {
+{ { { a } / { 2 x ^3 } } { b } }
+{ { c } { d } }
+{ { e } { f } } } ]
+( matrix {
+{ { 1 } }
+{ { 0 } } } )
+} }
+}
+```
+
+![matrices](examples/matrices.png)
+
+## Citations
+
+This is for referencing a source.  The details of the reference should be kept ina file called "ref.bib" stored in the same folder as the main trux file.  Its contents is in standard Biblatex format, for example
+
+```
+@article{wombat2016,
+	author   = {Walther Wombat and Klaus Koala},
+	title    = {The true meaning of 42},
+	journal  = {Journal of modern skepticism},
+	date     = {2016},
+	keywords = {trusted},
+}
+@book{lion2010,
+	author       = {Laura Lion and  Gabrielle Giraffe and Carl Capybara},
+	title        = {The dangers of asking the wrong question},
+	publisher    = {publishing house},
+	date         = {2010},
+	keywords     = {trusted},
+}
+@online{wikibook,
+	title        = {Generating Bibliographies with biblatex and biber},
+	organization = {Wikibooks},
+	date         = {2016},
+	urldate      = {2016-03-07},
+	url          = {https://en.wikibooks.org/wiki/LaTeX/Generating_Bibliographies_with_biblatex_and_biber},
+	keywords     = {untrusted},
+}
+```
+
+taken from [here](https://en.wikibooks.org/wiki/LaTeX/Bibliographies_with_biblatex_and_biber#A_simple_example).
+
+The trux document can refer to these references like this:
+
+```
+body {
+`At distant inhabit amongst by (` cite wombat2016 `). Appetite welcomed interest the goodness boy not. Estimable education (` cite lion2010 `) for disposing pronounce her. John good plan sent old roof own. Inquietude (` cite wikibook `) saw understood his friendship frequently yet. Nature his marked ham wished.`
+}
+```
+
+![citation](examples/citation.png)
+
+# Links and urls
+
+There are two ways to do this.
+
+```
+body {
+`Are sentiments apartments decisively the especially ` url `https://https://www.google.com/maps/place/Timbuktu,+Mali/@16.7713828,-3.0255319,14z/data=!3m1!4b1!4m5!3m4!1s0xe17ce977cbc8733:0x546f01bc8958b7c6!8m2!3d16.7665887!4d-3.0025615` ` alteration. Thrown shy denote ten ladies though ask saw. Or by to he ` link `going` `https://www.google.com/maps/place/Bangladesh/@24.0181187,87.9862164,7.5z/data=!4m5!3m4!1s0x30adaaed80e18ba7:0xf2d28e0c4e1fc6b!8m2!3d23.684994!4d90.356331` ` think order event music. Incommode so intention defective at convinced. Led income months itself and houses you. After nor you leave might share court balls.` 
+}
+```
+
+![links](examples/links.png)

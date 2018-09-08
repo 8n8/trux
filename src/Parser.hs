@@ -28,8 +28,8 @@ bracket1 = '{'
 bracket2 :: Char
 bracket2 = '}'
 
-preamble :: Bool -> String
-preamble bibliography =
+preamble :: String
+preamble =
     "\\documentclass{article}\n\
     \\\usepackage[utf8]{inputenc}\n\
     \\\usepackage{microtype}\n\
@@ -81,6 +81,8 @@ element2latex :: Element -> String
 element2latex element = case element of
     Text text -> text
     Italic text -> concat ["\\textit{", text, "}"]
+    Url text -> concat ["\\url{", text, "}"]
+    Hyperlink visible link -> concat ["\\href{", link, "}", "{", visible, "}" ]
     Bold text -> concat ["\\textbf{", text, "}"]
     CodeFromFile Nothing filePath ->
         concat ["\\lstinputlisting{", filePath, "}"]
@@ -235,6 +237,8 @@ data Element
   | Image Id Float [Element] String
   | Footnote [Element]
   | CodeFromFile (Maybe Language) FilePath
+  | Url String
+  | Hyperlink String String
     deriving Show
 
 newtype Language = Language String deriving Show
@@ -337,12 +341,26 @@ parseElement = choice
     , parseImage
     , parseFootnote
     , parseBold
+    , parseHyperlink
+    , parseUrl
     ]
 
 parseItalic :: Parser Element
 parseItalic = do
   _ <- parseFuncName "i"
   fmap Italic parseTextContent
+
+parseHyperlink :: Parser Element
+parseHyperlink = do
+    _ <- parseFuncName "link"
+    visible <- parseTextContent
+    link <- parseTextContent
+    return $ Hyperlink visible link
+
+parseUrl :: Parser Element
+parseUrl = do
+    _ <- parseFuncName "url"
+    fmap Url parseTextContent
 
 parseBold :: Parser Element
 parseBold = do

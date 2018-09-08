@@ -1,0 +1,11 @@
+body {
+Math { equation {
+[ matrix {
+{ { { a } / { 2 x ^3 } } { b } }
+{ { c } { d } }
+{ { e } { f } } } ]
+( matrix {
+{ { 1 } }
+{ { 0 } } } )
+} }
+}

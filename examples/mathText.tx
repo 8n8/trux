@@ -1,0 +1,3 @@
+body {
+Math { equation { a + b + c = 3 ` some ordinary text` } }
+}
