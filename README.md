@@ -329,7 +329,7 @@ body {
 
 ## Links and urls
 
-There are two ways to make links to websites.  'url' just puts in the full url. 'link' allows a some text to be displayed instead of the url.  Both are clickable. The word 'going' on line 5 of the screenshot below is clickable in the original pdf.
+There are two ways to make links to websites.  'url' just puts in the full url. 'link' allows a some text to be displayed instead of the url.  Both are clickable. The word 'going' on line 3 of the screenshot below is clickable in the original pdf.
 
 ```
 body {
