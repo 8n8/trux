@@ -230,3 +230,30 @@ equation { 5 x + 8 y - 4 z ^5 + 530 A ^3 = 3 h + 5 t ^7 }
 ```
 
 ![multiline mathematics](examples/multilineMath.png)
+
+### Primes
+
+Add a prime after a variable.
+
+```
+body {
+Math { equation { x ' a ' b ' ' } }
+}
+```
+
+![primes](examples/primes.png)
+
+### Brackets
+
+All sorts of brackets.
+
+```
+body {
+Math { equation {
+( od a b 1 ) [ { c + 3 x ^3 } / { d q ^4 } ] ( e ) [ f ] curly { { 5 } / { 3 } }
+}
+}
+}
+```
+
+![brackets](examples/brackets.png)
