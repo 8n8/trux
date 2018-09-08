@@ -81,6 +81,7 @@ element2latex :: Element -> String
 element2latex element = case element of
     Text text -> text
     Italic text -> concat ["\\textit{", text, "}"]
+    Bold text -> concat ["\\textbf{", text, "}"]
     CodeFromFile Nothing filePath ->
         concat ["\\lstinputlisting{", filePath, "}"]
     CodeFromFile (Just (Language lang)) filePath ->
@@ -222,6 +223,7 @@ newtype DocumentBody = DocumentBody [Element] deriving Show
 data Element
   = Text String
   | Italic String
+  | Bold String
   | Monospace String
   | MathElement Math
   | Header Numbered HeaderLevel [Element]
@@ -334,12 +336,18 @@ parseElement = choice
     , parseTable
     , parseImage
     , parseFootnote
+    , parseBold
     ]
 
 parseItalic :: Parser Element
 parseItalic = do
   _ <- parseFuncName "i"
   fmap Italic parseTextContent
+
+parseBold :: Parser Element
+parseBold = do
+    _ <- parseFuncName "b"
+    fmap Bold parseTextContent
 
 parseMonospace :: Parser Element
 parseMonospace = do
