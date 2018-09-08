@@ -1,12 +1,10 @@
-# trux
-
 Trux is a wrapper around Latex for writing reports more easily.  Latex produces beautiful output, but I find it awkward to use and hard to debug so I wrote Trux to make it really easy to create Latex reports.  The main difference from convert-markdown-to-Latex tools, like Pandoc is that Trux has a new, easier way to write mathematics.
 
-## Complete set of usage examples
+# Complete set of usage examples
 
 The intention of this section is that it will contain a minimal example for every single feature of trux, followed by a screenshot of the resulting pdf.
 
-### Hello World
+## Hello World
 
 Gives a blank page except for the words "Hello World!".
 
@@ -18,7 +16,7 @@ body {
 
 ![Hello world](examples/helloWorld.png)
 
-### Document title
+## Document title
 
 Puts a title at the top of the document.
 
@@ -29,7 +27,7 @@ body { `Now residence dashwoods she excellent you. Shade being under his bed her
 
 ![title](examples/title.png)
 
-### Document author
+## Document author
 
 Puts an author at the top of the document.
 
@@ -41,7 +39,7 @@ body { `Is post each that just leaf no. He connection interested so we an sympat
 
 ![author](examples/author.png)
 
-### Document date
+## Document date
 
 Puts a date at the top of the document.
 
@@ -53,7 +51,7 @@ body { `Rank tall boy man them over post now. Off into she bed long fat room. Re
 
 ![date](examples/date.png)
 
-### Paragraphs
+## Paragraphs
 
 Make a new paragraph.
 
@@ -67,7 +65,7 @@ p
 
 ![paragraph](examples/paragraph.png)
 
-### Italics
+## Italics
 
 Insert italic text.
 
@@ -79,7 +77,7 @@ body {
 
 ![italics](examples/italics.png)
 
-### Bold text
+## Bold text
 
 Inserts bold text.
 
@@ -90,6 +88,41 @@ body {
 ```
 
 ![bold](examples/bold.png)
+
+
+## Insert an image into the document
+
+Inserts an image into the document. First use the word 'image'.  The 'ref23' shown here is a made-up string of characters and numbers.  This can be used to refer to the image in other places in the text. The `0.5` is the width of the image, where `1` is the maximum width between the margins.  The expression in the curly brackets is the caption, and the final `sunflower.jpg` is the name of the image file.
+
+```
+body {
+`In on announcing if of comparison pianoforte projection. Abroad danger likely regret twenty edward do. Too horrible consider followed may differed age.`
+
+image ref23 `0.5` { `A sunflower` } `sunflower.jpg`
+
+`An rest if more five mr of. Age just her rank met down way. Attended required so in cheerful an. Domestic replying she resolved him for did. Rather in lasted no within no.`
+}
+```
+
+![image](examples/image.png)
+
+## Tables
+
+Make a simple table.
+
+```
+body {
+table someref3 { `Cowered outside up because fed` } {
+{ { `Among` } { `self-conciously` } { `much` } }
+{ { `Other much` } { `less` } { `33.22222` } }
+{ { `delicate admonishing` } { `firefly` } { `4933.88` } }
+}
+}
+```
+
+![tables](examples/table.png)
+
+## Mathematics
 
 ### Inline mathematics
 
@@ -117,18 +150,70 @@ Math { equation { x = 2 } }
 
 ![display-mode mathematics](examples/displayMath.png)
 
-### Insert an image into the document
+### Fractions
 
-Inserts an image into the document.
+Mathematical fractions.
 
 ```
 body {
-`In on announcing if of comparison pianoforte projection. Abroad danger likely regret twenty edward do. Too horrible consider followed may differed age.`
-
-image ref23 `0.5` { `A sunflower` } `sunflower.jpg`
-
-`An rest if more five mr of. Age just her rank met down way. Attended required so in cheerful an. Domestic replying she resolved him for did. Rather in lasted no within no.`
+Math { equation { { 3 x ^2 } / { 42 - m c ^3 } } }
 }
 ```
 
-![image](examples/image.png)
+![fractions](examples/fractions.png)
+
+### Powers
+
+Raising things to a power.
+
+```
+body {
+Math { equation { x ^3 y ^a a ^b b ^ { 3 x + 2 p - 4 z } } }
+}
+```
+
+![powers](examples/powers.png)
+
+### Greek variables
+
+Use Greek characters as variables.  Only the Greek characters that are easily distinguishable from the Englsh alphabet are allowed.
+
+```
+body {
+Math { equation { alpha beta gamma Gamma delta Delta epsilon zeta eta theta Theta iota lambda Lambda mu nu xi Xi pi Pi rho sigma Sigma tau upsilon Upsilon phi Phi chi psi Psi omega Omega } }
+}
+```
+
+![greek variables](examples/greekMath.png)
+
+### Bold variables
+
+These are useful for vectors and matrices.
+
+```
+body {
+Math { equation { #a #b #c #d #z #Z #omega #Omega #pi #Pi } }
+}
+```
+
+![bold variables](examples/boldMath.png)
+
+### Ordinary derivatives
+
+```
+body {
+Math { equation { od x y 1 od x y 3 od a b 5 od omega psi 4 } }
+}
+```
+
+![ordinary derivatives](examples/ordinaryderivatives.png)
+
+### Partial derivatives
+
+```
+body {
+Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
+}
+```
+
+![partial derivatives](examples/partialderivatives.png)
