@@ -83,7 +83,7 @@ parseUnderscore :: Parser String
 parseUnderscore = try (char '_') >> return "\\_"
 
 parseTilde :: Parser String
-parseTilde = try (char '_') >> return "\\textasciitilde "
+parseTilde = try (char '~') >> return "\\textasciitilde "
 
 parseBackslash :: Parser String
 parseBackslash = try (char '\\') >> return "\\textbackslash "

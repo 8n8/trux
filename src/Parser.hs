@@ -33,6 +33,7 @@ preamble =
     "\\documentclass{article}\n\
     \\\usepackage[utf8]{inputenc}\n\
     \\\usepackage{microtype}\n\
+    \\\usepackage{listings}\n\
     \\\usepackage[hidelinks]{hyperref}\n\
     \\\usepackage{amsmath}\n\
     \\\usepackage{amsfonts}\n\
@@ -50,7 +51,8 @@ preamble =
     \\\usepackage{breqn}\n\
     \\\usepackage{cleveref}\n\
     \\\creflabelformat{equation}{#2#1#3}\n\
-    \\\crefdefaultlabelformat{#2#1#3}\n"
+    \\\crefdefaultlabelformat{#2#1#3}\n\
+    \\\lstset{basicstyle=\\ttfamily}\n"
 
 parse2Latex :: Parser String
 parse2Latex = fmap doc2latex parseDocument
@@ -79,6 +81,11 @@ element2latex :: Element -> String
 element2latex element = case element of
     Text text -> text
     Italic text -> concat ["\\textit{", text, "}"]
+    CodeFromFile Nothing filePath ->
+        concat ["\\lstinputlisting{", filePath, "}"]
+    CodeFromFile (Just (Language lang)) filePath ->
+        concat ["\\lstinputlisting[language=", lang, "]{", filePath, "}" ]
+    Monospace text -> concat ["\\texttt{", text, "}"]
     Footnote elements -> footnote2latex elements
     MathElement contents -> math2latex contents
     Header numbered level elements -> header2latex numbered level elements
@@ -215,6 +222,7 @@ newtype DocumentBody = DocumentBody [Element] deriving Show
 data Element
   = Text String
   | Italic String
+  | Monospace String
   | MathElement Math
   | Header Numbered HeaderLevel [Element]
   | CrossReference Id
@@ -224,7 +232,10 @@ data Element
   | Table Id [Element] [[[Element]]]
   | Image Id Float [Element] String
   | Footnote [Element]
+  | CodeFromFile (Maybe Language) FilePath
     deriving Show
+
+newtype Language = Language String deriving Show
 
 newtype Title = Title [Element] deriving Show
 
@@ -286,6 +297,19 @@ parseTitle = do
     title <- parseList bracket1 bracket2 parseHeaderElement
     return $ Title title
 
+parseCode :: Parser Element
+parseCode = do
+    _ <- parseFuncName "code"
+    lang <- fmap Just parseCodeLang <|> return Nothing
+    filepath <- parseTextContent
+    return $ CodeFromFile lang filepath
+
+parseCodeLang :: Parser Language
+parseCodeLang = do
+    _ <- parseFuncName "lang"
+    lang <- parseTextContent
+    return $ Language lang
+
 parseAuthor :: Parser (Maybe Author)
 parseAuthor =
     (do
@@ -298,6 +322,8 @@ parseElement :: Parser Element
 parseElement = choice
     [ parseText
     , parseItalic
+    , parseCode
+    , parseMonospace
     , MathElement <$> parseDisplayMath
     , MathElement <$> parseInlineMath
     , parseHeader
@@ -314,6 +340,11 @@ parseItalic :: Parser Element
 parseItalic = do
   _ <- parseFuncName "i"
   fmap Italic parseTextContent
+
+parseMonospace :: Parser Element
+parseMonospace = do
+  _ <- parseFuncName "t"
+  fmap Monospace parseTextContent
 
 parseCitation :: Parser Element
 parseCitation = do

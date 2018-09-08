@@ -14,13 +14,14 @@ import Control.Monad (forever)
 main :: IO ()
 main = do
   filepath <- fmap head getArgs
+  runOnce filepath
   let container = containingDir filepath
   _ <- Fsn.withManager $ \mgr -> do
     _ <- Fsn.watchDir
         mgr
         container
         (predicate filepath) 
-        (runOnce filepath)
+        (\_ -> runOnce filepath)
     forever $ threadDelay 1000000
   return ()
 
@@ -49,8 +50,8 @@ predicate filePath (Fsn.Modified fpModified _) =
     (fileName fpModified) == filePath
 predicate _ _ = False
 
-runOnce :: String -> Fsn.Event -> IO ()
-runOnce filepath _ = do
+runOnce :: String -> IO ()
+runOnce filepath = do
   filecontents <- readFile filepath
   let fileRoot = (striptx filepath)
   case parse parse2Latex filepath filecontents of
