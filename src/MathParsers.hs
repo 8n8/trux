@@ -305,7 +305,8 @@ simpleSubstitutions =
     , ("mod", "\\mod ")
     , ("max", "\\max ")
     , ("min", "\\min ")
-    , ("+-", "\\pm ") ]
+    , ("+-", "\\pm ")
+    , ("curlyd", "\\partial ") ]
 
 parseSqrt :: Parser MathElement
 parseSqrt = do

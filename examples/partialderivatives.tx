@@ -1,3 +1,3 @@
 body {
-Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
+Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 curlyd curlyd } }
 }

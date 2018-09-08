@@ -212,7 +212,7 @@ Math { equation { od x y 1 od x y 3 od a b 5 od omega psi 4 } }
 
 ```
 body {
-Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
+Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 curlyd curlyd } }
 }
 ```
 
@@ -286,6 +286,34 @@ Math { equation {
 
 ![matrices](examples/matrices.png)
 
+### Trig symbols
+
+body {
+Math { equation { sin cos tan sinh cosh tanh } }
+}
+
+![trig](trig.png)
+
+### Set symbols
+
+```
+body {
+math { in notin owns subset subset= superset superset= intersect empty diff }
+}
+```
+
+![set](examples/set.png)
+
+### Other mathematical symbols
+
+```
+body {
+math { exp log ln * star <= >= ~= != mod max min +- }
+}
+```
+
+![otherMath](examples/otherMath.png)
+
 ## Citations
 
 This is for referencing a source.  The details of the reference should be kept in a file called "ref.bib" stored in the same folder as the main trux file.  Its contents is in standard Biblatex format, for example
@@ -315,7 +343,7 @@ This is for referencing a source.  The details of the reference should be kept i
 }
 ```
 
-taken from [here](https://en.wikibooks.org/wiki/LaTeX/Bibliographies_with_biblatex_and_biber#A_simple_example).
+taken from [here](https://en.wikibooks.org/wiki/LaTeX/Bibliographies_with_biblatex_and_biber).
 
 The trux document can refer to these references like this:
 
