@@ -90,3 +90,45 @@ body {
 ```
 
 ![bold](examples/bold.png)
+
+### Inline mathematics
+
+Inserts mathematics in line with the text.
+
+```
+body {
+`Pleased yet equally correct colonel ` math { x = 2 } ` rest of know draw fond post as.`
+}
+```
+
+![bold](examples/inlineMath.png)
+
+### Display-mode mathematics
+
+Inserts mathematics on its own line.  Better for larger expressions and multi-line expressions.
+
+```
+body {
+`Is branched in my up strictly remember. Songs but chief has ham widow downs. Genius or so up vanity cannot.` 
+Math { equation { x = 2 } }
+`When be draw drew ye. Defective in do recommend suffering. House it seven in spoil tiled court.` 
+}
+```
+
+![display-mode mathematics](examples/displayMath.png)
+
+### Insert an image into the document
+
+Inserts an image into the document.
+
+```
+body {
+`In on announcing if of comparison pianoforte projection. Abroad danger likely regret twenty edward do. Too horrible consider followed may differed age.`
+
+image ref23 `0.5` { `A sunflower` } `sunflower.jpg`
+
+`An rest if more five mr of. Age just her rank met down way. Attended required so in cheerful an. Domestic replying she resolved him for did. Rather in lasted no within no.`
+}
+```
+
+![image](examples/image.png)

@@ -28,8 +28,8 @@ bracket1 = '{'
 bracket2 :: Char
 bracket2 = '}'
 
-preamble :: String
-preamble =
+preamble :: Bool -> String
+preamble bibliography =
     "\\documentclass{article}\n\
     \\\usepackage[utf8]{inputenc}\n\
     \\\usepackage{microtype}\n\
@@ -37,7 +37,7 @@ preamble =
     \\\usepackage[hidelinks]{hyperref}\n\
     \\\usepackage{amsmath}\n\
     \\\usepackage{amsfonts}\n\
-    \\\usepackage[style=authoryear]{biblatex}\n\
+    \\\usepackage[backend=biber,style=authoryear]{biblatex}\n\
     \\\bibliography{ref}\n\
     \\\usepackage{graphicx}\n\
     \\\usepackage{bm}\n\
