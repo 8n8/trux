@@ -217,3 +217,16 @@ Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 } }
 ```
 
 ![partial derivatives](examples/partialderivatives.png)
+
+### Multiline equations
+
+```
+body {
+Math {
+equation { 3 x + 5 y = 2 = 1 + 1 }
+equation { 5 x + 8 y - 4 z ^5 + 530 A ^3 = 3 h + 5 t ^7 }
+}
+}
+```
+
+![multiline mathematics](examples/multilineMath.png)
