@@ -288,7 +288,7 @@ Math { equation {
 
 ## Citations
 
-This is for referencing a source.  The details of the reference should be kept ina file called "ref.bib" stored in the same folder as the main trux file.  Its contents is in standard Biblatex format, for example
+This is for referencing a source.  The details of the reference should be kept in a file called "ref.bib" stored in the same folder as the main trux file.  Its contents is in standard Biblatex format, for example
 
 ```
 @article{wombat2016,
@@ -327,13 +327,17 @@ body {
 
 ![citation](examples/citation.png)
 
-# Links and urls
+## Links and urls
 
-There are two ways to do this.
+There are two ways to make links to websites.  'url' just puts in the full url. 'link' allows a some text to be displayed instead of the url.  Both are clickable. The word 'going' on line 5 of the screenshot below is clickable in the original pdf.
 
 ```
 body {
-`Are sentiments apartments decisively the especially ` url `https://https://www.google.com/maps/place/Timbuktu,+Mali/@16.7713828,-3.0255319,14z/data=!3m1!4b1!4m5!3m4!1s0xe17ce977cbc8733:0x546f01bc8958b7c6!8m2!3d16.7665887!4d-3.0025615` ` alteration. Thrown shy denote ten ladies though ask saw. Or by to he ` link `going` `https://www.google.com/maps/place/Bangladesh/@24.0181187,87.9862164,7.5z/data=!4m5!3m4!1s0x30adaaed80e18ba7:0xf2d28e0c4e1fc6b!8m2!3d23.684994!4d90.356331` ` think order event music. Incommode so intention defective at convinced. Led income months itself and houses you. After nor you leave might share court balls.` 
+`Are sentiments apartments decisively the especially `
+url `https://www.bbc.co.uk/news/world`
+` alteration. Thrown shy denote ten ladies though ask saw. Or by to he `
+link `going` `https://www.google.com/maps/place/Bangladesh/@24.0181187,87.9862164,7.5z/data=!4m5!3m4!1s0x30adaaed80e18ba7:0xf2d28e0c4e1fc6b!8m2!3d23.684994!4d90.356331`
+` think order event music. Incommode so intention defective at convinced. Led income months itself and houses you. After nor you leave might share court balls.` 
 }
 ```
 
