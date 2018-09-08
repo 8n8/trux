@@ -298,7 +298,7 @@ Math { equation { sin cos tan sinh cosh tanh } }
 
 ```
 body {
-math { in notin owns subset subset= superset superset= intersect empty diff }
+math { in notin owns subset subset= superset superset= intersect union empty diff }
 }
 ```
 
@@ -308,7 +308,7 @@ math { in notin owns subset subset= superset superset= intersect empty diff }
 
 ```
 body {
-math { exp log ln * star <= >= ~= != mod max min +- }
+math { exp log ln * star <= >= ~= != mod max min +- sqrt { x ^2 + 3 y } nthRoot 3 { x ^4 - 2 z } }
 }
 ```
 
@@ -370,3 +370,21 @@ link `going` `https://www.google.com/maps/place/Bangladesh/@24.0181187,87.986216
 ```
 
 ![links](examples/links.png)
+
+## Footnotes
+
+```
+body {
+`Unpleasant astonished an diminution up partiality. Noisy an their of meant. Death means up civil do an offer wound of. Called square an in afraid direct. Resolution diminution conviction so mr at unpleasing simplicity no.`
+footnote { `No it as breakfast up conveying ` math { 3 x ^2 . } }
+` Him son disposed produced humoured overcame she bachelor improved. Studied however out wishing but inhabit fortune windows.`
+}
+```
+
+In the paragraph it looks like this:
+
+![footnotes in text](examples/footnotes1.png)
+
+And at the bottom of the page is the footnote:
+
+![footnote](examples/footnotes2.png)

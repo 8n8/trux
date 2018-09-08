@@ -306,7 +306,8 @@ simpleSubstitutions =
     , ("max", "\\max ")
     , ("min", "\\min ")
     , ("+-", "\\pm ")
-    , ("curlyd", "\\partial ") ]
+    , ("curlyd", "\\partial ")
+    , ("%", "\\% ") ]
 
 parseSqrt :: Parser MathElement
 parseSqrt = do
@@ -474,7 +475,7 @@ parseDisplayMathLine = do
     return $ DisplayMathLine numbered content
 
 mathOperatorChars :: String
-mathOperatorChars = "!=%-+\'<>.,;:@\"/"
+mathOperatorChars = "!=-+\'<>.,;:@\"/"
 
 data DisplayMathLine = DisplayMathLine Numbered [MathElement] deriving Show
 
