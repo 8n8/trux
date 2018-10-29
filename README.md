@@ -4,7 +4,17 @@ Trux is a wrapper around Latex for writing reports more easily.  Trux only expos
 
 # Installation
 
+This installation has been tested in Ubuntu Linux 18.04.
+
 First install Git and the [Haskell Tool Stack](https://docs.haskellstack.org/en/stable/README/).  Then clone this repository, cd into it and run ```stack install```.
+
+# Usage (Linux)
+
+Use any text editor to type your Trux code.  Then run the program from the command line with
+
+```$ trux nameOfYourFile```
+
+This will generate a PDF document.
 
 # Complete set of usage examples
 
