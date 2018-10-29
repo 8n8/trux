@@ -17,3 +17,14 @@ Main.elm
 nusrc/*
 examples/*.pdf
 *.swp
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+examples/*.tex
+test.tex

@@ -307,7 +307,8 @@ simpleSubstitutions =
     , ("min", "\\min ")
     , ("+-", "\\pm ")
     , ("curlyd", "\\partial ")
-    , ("%", "\\% ") ]
+    , ("%", "\\% ")
+    , ("dot", "\\cdot ") ]
 
 parseSqrt :: Parser MathElement
 parseSqrt = do
@@ -456,7 +457,7 @@ parseGreekCharString = choice $ fmap parseFuncName greekMathVars
 greekMathVars :: [String]
 greekMathVars =
     [ "alpha", "beta", "gamma", "Gamma", "delta", "Delta", "epsilon"
-    , "zeta", "eta", "theta", "Theta", "iota", "lambda", "Lambda" , "mu"
+    , "zeta", "eta", "theta", "Theta", "iota", "lambda", "Lambda", "mu"
     , "nu", "xi", "Xi", "pi", "Pi", "rho", "sigma", "Sigma", "tau"
     , "upsilon", "Upsilon", "phi", "Phi", "chi", "psi", "Psi", "omega"
     , "Omega"]

@@ -109,7 +109,7 @@ element2latex element = case element of
         , "} \\end{table}"
         ]
     Image (Id idCode) width caption filename -> concat
-        [ "\n\\begin{figure}[H]\\centering \\includegraphics[width="
+        [ "\\begin{figure}[H]\\centering \\includegraphics[width="
         , show width
         , "\\textwidth]{"
         , filename
