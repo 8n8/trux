@@ -2,6 +2,10 @@ Note that this project is a work in progress.  It works, but more features will 
 
 Trux is a wrapper around Latex for writing reports more easily.  Trux only exposes a small subset of Latex, but it chooses sensible defaults and has much better error messages.  The main difference from convert-markdown-to-Latex tools, like Pandoc is that Trux is much better for writing mathematics.
 
+# Installation
+
+First install Git and the [Haskell Tool Stack](https://docs.haskellstack.org/en/stable/README/).  Then clone this repository, cd into it and run ```stack install```.
+
 # Complete set of usage examples
 
 The intention of this section is that it will contain a minimal example for every single feature of trux, followed by a screenshot of the resulting pdf.
