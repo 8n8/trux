@@ -443,3 +443,15 @@ Math { equation num someRef { x = 2 } }
 ```
 
 ![cross-references](examples/crossReference.png)
+
+## Monospace text
+
+Change text to a monospace font:
+
+```
+body {
+`Some ordinary text ` t `and some monospace text ` `followed by more ordinary text.`
+}
+```
+
+![monospace](examples/monospace.png)
