@@ -344,7 +344,7 @@ math { in notin owns subset subset= superset superset= intersect union empty dif
 
 ```
 body {
-math { exp log ln * star <= >= ~= != mod max min +- sqrt { x ^2 + 3 y } nthRoot 3 { x ^4 - 2 z } }
+math { ! = % - + ' < > . , ; : @ " / exp log ln * star <= >= ~= != mod max min +- sqrt { x ^2 + 3 y } nthRoot 3 { x ^4 - 2 z } }
 }
 ```
 
