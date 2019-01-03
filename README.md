@@ -328,7 +328,7 @@ Math { equation { sin cos tan sinh cosh tanh } }
 }
 ```
 
-![trig](trig.png)
+![trig](examples/trig.png)
 
 ### Set symbols
 

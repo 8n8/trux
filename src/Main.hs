@@ -61,7 +61,7 @@ runOnce filepath = do
           _ <- callProcess "latexmk"
               ["-pdf", "-interaction=nonstopmode", fileRoot ++ ".tex"]
           return ()
-  -- removeLatexJunk fileRoot
+  removeLatexJunk fileRoot
 
 striptx :: String -> String
 striptx filepath =
