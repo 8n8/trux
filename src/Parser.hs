@@ -91,6 +91,16 @@ element2latex element = case element of
     Monospace text -> concat ["\\texttt{", text, "}"]
     Footnote elements -> footnote2latex elements
     MathElement contents -> math2latex contents
+    BulletPoints bullets -> concat
+        [ "\n\\begin{itemize}"
+        , bullets2latex bullets
+        , "\n\\end{itemize}"
+        ]
+    NumberedList bullets -> concat
+        [ "\n\\begin{enumerate}"
+        , list2latex bullets
+        , "\n\\end{enumerate}"
+        ]
     Header numbered level elements -> header2latex numbered level elements
     CrossReference (Id idCode) -> concat [ "\\cref{", idCode, "}" ]
     Umlaut character -> ['\\', '\"', character]
@@ -120,6 +130,31 @@ element2latex element = case element of
         , "} \\end{figure}"
         ]
     Citation (Id idCode) -> concat [ "\\cite{", idCode, "}" ]
+
+list2latex :: [NumberedPoint] -> String
+list2latex bullets = concatMap listItem2latex bullets
+
+bullets2latex :: [[Element]] -> String
+bullets2latex = concatMap bullet2latex 
+
+bullet2latex :: [Element] -> String
+bullet2latex elements = concat
+    [ "\n\\item "
+    , concatMap element2latex elements
+    ]
+
+listItem2latex :: NumberedPoint -> String
+listItem2latex (NumberedPoint Nothing elements) = concat
+    [ "\n\\item "
+    , concatMap element2latex elements
+    ]
+listItem2latex (NumberedPoint (Just (Id idCode)) elements) = concat
+    [ "\n\\item "
+    , " \\label{"
+    , idCode
+    , "} "
+    , concatMap element2latex elements
+    ]
 
 tableAlignStr :: [[[Element]]] -> String
 tableAlignStr table =
@@ -222,6 +257,8 @@ newtype Date = Date [Element] deriving Show
 
 newtype DocumentBody = DocumentBody [Element] deriving Show
 
+data NumberedPoint = NumberedPoint (Maybe Id) [Element] deriving Show
+
 data Element
   = Text String
   | Italic String
@@ -229,6 +266,8 @@ data Element
   | Monospace String
   | MathElement Math
   | Header Numbered HeaderLevel [Element]
+  | BulletPoints [[Element]]
+  | NumberedList [NumberedPoint]
   | CrossReference Id
   | Citation Id
   | Umlaut Char
@@ -343,6 +382,8 @@ parseElement = choice
     , parseBold
     , parseHyperlink
     , parseUrl
+    , parseBulletPoints
+    , parseNumberedList
     ]
 
 parseItalic :: Parser Element
@@ -435,6 +476,29 @@ parseHeader = do
     header <- parseList bracket1 bracket2 parseHeaderElement
     return $ Header numbered headerLevel header
 
+parseMaybeId :: Parser (Maybe Id)
+parseMaybeId =
+  (Just <$> parseId) <|> (return Nothing)
+
+parseBulletPoints :: Parser Element
+parseBulletPoints = do
+  _ <- parseFuncName "bullets"
+  BulletPoints <$> (parseList '{' '}' parseBullet)
+
+parseNumberedList :: Parser Element
+parseNumberedList = do
+  _ <- parseFuncName "list"
+  NumberedList <$> (parseList '{' '}' parseListItem)
+
+parseBullet :: Parser [Element]
+parseBullet = parseList '{' '}' parseFootnoteElement
+
+parseListItem :: Parser NumberedPoint
+parseListItem = do
+  maybeId <- parseMaybeId
+  content <- parseList '{' '}' parseFootnoteElement
+  return $ NumberedPoint maybeId content
+
 parseFootnote :: Parser Element
 parseFootnote = do
     _ <- parseFuncName "footnote"
@@ -448,6 +512,9 @@ parseFootnoteElement = choice
     , MathElement <$> parseDisplayMath
     , parseCrossReference
     , parseItalic
+    , parseMonospace
+    , parseBold
+    , parseElementSimpleSub
     , parseUmlaut ]
 
 parseHeaderElement :: Parser Element
@@ -455,6 +522,9 @@ parseHeaderElement = choice
     [ parseText
     , MathElement <$> parseInlineMath
     , parseCrossReference
+    , parseBold
+    , parseMonospace
+    , parseGeneralElementSimpleSub ("euro", "\\euro{}")
     , parseUmlaut ]
 
 parseText :: Parser Element
