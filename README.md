@@ -493,3 +493,27 @@ Math { equation { { x y z } / { p q r ^3 } } } }
 ```
 
 ![bullets](examples/bullets.png)
+
+## Numbered list
+
+Make a list with numbered points.
+
+```
+body {
+`Unwilling sportsmen he in questions september therefore described so. Attacks may set few believe moments was. Reasonably how possession shy way introduced age inquietude. Missed he engage no exeter of. Still tried means we aware order among on. Eldest father can design tastes did joy settle.`
+list {
+{ `May indulgence difficulty ham can put especially. Bringing remember for supplied her why was confined. Middleton principle did she procuring extensive believing add. Weather adapted prepare oh is calling. These wrong of he which there smile to my front. He fruit oh enjoy it of whose table. Cultivated occasional old her unpleasing unpleasant. At as do be against pasture covered viewing started. Enjoyed me settled mr respect no spirits civilly.`
+Math { equation { e = m c ^2 } }
+}
+
+someref1 { `Boy favourable day can introduced sentiments entreaties.` }
+
+{ `Affronting everything discretion men now own did. Still round match we to. Frankness pronounce daughters remainder extensive has but. Happiness cordially one determine concluded fat. Plenty season beyond by hardly giving of.`
+}
+
+}
+`Unpleasant nor diminution excellence (see ` ref someref1 `) apartments imprudence the met new. Draw part them he an to he roof only. Music leave say doors him. Tore bred form if sigh case as do. Staying he no looking if do opinion. Sentiments way understood end partiality and his.`
+}
+```
+
+![numberedList](examples/numberedList.png)
