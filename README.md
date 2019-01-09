@@ -2,7 +2,45 @@ Note that this project is a work in progress.  It works, but more features will 
 
 Trux is a wrapper around Latex for writing reports more easily.  Trux only exposes a small subset of Latex, but it chooses sensible defaults and has much better error messages.  The main difference from convert-markdown-to-Latex tools, like Pandoc is that Trux is much better for writing mathematics.
 
-[[toc]]
+   * [Installation](#installation)
+   * [Usage (Linux)](#usage-linux)
+   * [Complete set of usage examples](#complete-set-of-usage-examples)
+      * [Hello World](#hello-world)
+      * [Document title](#document-title)
+      * [Document author](#document-author)
+      * [Document date](#document-date)
+      * [Paragraphs](#paragraphs)
+      * [Italics](#italics)
+      * [Bold text](#bold-text)
+      * [Section headings](#section-headings)
+      * [Insert an image into the document](#insert-an-image-into-the-document)
+      * [Tables](#tables)
+      * [Mathematics](#mathematics)
+         * [Inline mathematics](#inline-mathematics)
+         * [Display-mode mathematics](#display-mode-mathematics)
+         * [Fractions](#fractions)
+         * [Powers](#powers)
+         * [Greek variables](#greek-variables)
+         * [Bold variables](#bold-variables)
+         * [Ordinary derivatives](#ordinary-derivatives)
+         * [Partial derivatives](#partial-derivatives)
+         * [Multiline equations](#multiline-equations)
+         * [Primes](#primes)
+         * [Brackets](#brackets)
+         * [Ordinary text inside equation](#ordinary-text-inside-equation)
+         * [Matrices and vectors](#matrices-and-vectors)
+         * [Trig symbols](#trig-symbols)
+         * [Set symbols](#set-symbols)
+         * [Other mathematical symbols](#other-mathematical-symbols)
+         * [Equation numbers](#equation-numbers)
+      * [Citations](#citations)
+      * [Links and urls](#links-and-urls)
+      * [Footnotes](#footnotes)
+      * [Cross-references](#cross-references)
+      * [Monospace text](#monospace-text)
+      * [Bullet points](#bullet-points)
+      * [Numbered list](#numbered-list)
+
 
 # Installation
 
