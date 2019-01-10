@@ -69,7 +69,7 @@ The disadvantages to Trux are:
 
 The main things that are annoying in Latex and which you don't have to think about in Trux are:
 
-1. Quote marks. In Latex, you have to use ```'``` (apostrophe) for 6-shaped quotes and ``````` (backtick) for 9-shaped quotes. In Trux you just use ```'``` (apostrophe) or ```"``` (double quote) and it works out which way around it should go from the context.
+1. Quote marks. In Latex, you have to use ```'``` (apostrophe) for 6-shaped quotes and ``` ` ``` (backtick) for 9-shaped quotes. In Trux you just use ```'``` (apostrophe) or ```"``` (double quote) and it works out which way around it should go from the context.
 2. Tables. In Latex, the default table lines are too close to the cells. Trux uses the booktabs package and gets the lines right.
 3. Figures.  In Latex, you have 'floats' for inserting images and tables etc.  Latex works out where to insert them so that they fit in nicely with the flow of the text.  I personally much prefer it if my images and tables are inserted exactly where I want them.  You can do this in Latex, but you have to manually sort out captions and cross-references and adding the right amount of whitespace around them.  Trux inserts figures exactly where they are declared, centres them, adds the correct whitespace, and adds a caption and a cross-reference.
 4. Spacing after full stops.  Latex adds a bit of extra space after a full stop, so sentences are separated better, but this means that after something like "e.g." you have to put a backslash to not have the extra space. Trux just uses a small space after each full stop, which looks fine for everything.
