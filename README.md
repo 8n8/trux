@@ -2,8 +2,10 @@ Note that this project is a work in progress.  It works, but more features will 
 
 Trux is a wrapper around Latex for writing reports more easily.  Trux only exposes a small subset of Latex, but it chooses sensible defaults and has much better error messages.  The main difference from convert-markdown-to-Latex tools, like Pandoc is that Trux is much better for writing mathematics.
 
+
    * [Installation](#installation)
    * [Usage (Linux)](#usage-linux)
+   * [Pros and cons](#pros-and-cons)
    * [Complete set of usage examples](#complete-set-of-usage-examples)
       * [Hello World](#hello-world)
       * [Document title](#document-title)
@@ -55,6 +57,30 @@ Use any text editor to type your Trux code.  Then run the program from the comma
 ```$ trux nameOfYourFile```
 
 This will generate a PDF document.
+
+# Pros and cons
+
+The disadvantages to Trux are:
+1. It has only been tested in Linux.
+2. It can't really be customised at all.  This is partly a feature, in that its purpose is to help in quickly producing a neat-looking technical document without the user having to worry about appearance.  If you have specific layout requirements, like double columns, or a particular font, then you are probably best using Latex or MS Word.
+3. The source code is not very well documented yet, although it is pretty small and simple and should not be too hard to understand.
+4. There are probably quite a few missing features and bugs, as it is all quite new.
+5. There is no editor support, so no syntax highlighting etc.
+
+The main things that are annoying in Latex and which you don't have to think about in Trux are:
+
+1. Quote marks. In Latex, you have to use ```'``` (apostrophe) for 6-shaped quotes and ``````` (backtick) for 9-shaped quotes. In Trux you just use ```'``` (apostrophe) or ```"``` (double quote) and it works out which way around it should go from the context.
+2. Tables. In Latex, the default table lines are too close to the cells. Trux uses the booktabs package and gets the lines right.
+3. Figures.  In Latex, you have 'floats' for inserting images and tables etc.  Latex works out where to insert them so that they fit in nicely with the flow of the text.  I personally much prefer it if my images and tables are inserted exactly where I want them.  You can do this in Latex, but you have to manually sort out captions and cross-references and adding the right amount of whitespace around them.  Trux inserts figures exactly where they are declared, centres them, adds the correct whitespace, and adds a caption and a cross-reference.
+4. Spacing after full stops.  Latex adds a bit of extra space after a full stop, so sentences are separated better, but this means that after something like "e.g." you have to put a backslash to not have the extra space. Trux just uses a small space after each full stop, which looks fine for everything.
+5. Maths. Trux adds lots of little conveniences to writing maths, like adding a # before variables to make them bold, and automatically aligning multi-line equations nicely.
+6. Cross-references.  Trux automatically puts in the type of thing the cross-reference points to, so if you refer to an equation, it says "eq. 10", or "table 5" for a table etc, rather than just the number on its own.
+7. Citations.  When referring to external references, like books or webpages, all you need is a biblatex file called 'ref.bib' in the same directory, and you can just use 'cite' in Trux to refer to them, without worrying about whether to use biber or biblatex or whether to run pdflatex before biber and all that.
+8. Junk files. Latex generates loads of extra files while running, like .aux and .log files.  I think that these can save some time on future runs, but not enough that I have ever noticed it.  I find that these clutter up my filesystem, and I have to have a separate directory for each project.  Trux deletes them all after every run of Latex, so the only files that you see are the source file and the pdf file.
+9. Number of runs. Often in Latex it is not enough to just run 'pdflatex' once.  You have to run it several times to generate all the cross-references etc.  It's even worse if there are external references, as various commands have to be run in the correct order.  Trux uses latexmk, which does all the correct runs automatically.
+10. Trux also runs continuously once it has been started.  It constantly watches the source file and runs whenever it is saved.
+11. Trux always uses the microtype package, which improves the word spacing and line breaking.
+12. In my opinion, Latex has terrible error messages.  It outputs a huge wall of meaningless text with an obscure error message hidden somewhere inside it.  Trux has really clear, simple error messages.
 
 # Complete set of usage examples
 
