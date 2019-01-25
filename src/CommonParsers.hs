@@ -46,6 +46,8 @@ parseSpecialChar = try $ choice
     , parseUnderscore
     , parseTilde
     , parseBackslash
+    , parseCurlyOpen
+    , parseCurlyClose
     , parseAmpersand ]
 
 parseOpenQuote :: Parser String
@@ -75,6 +77,12 @@ parseDecimal = try $ do
 
 parseDollar :: Parser String
 parseDollar = try (char '$') >> return "\\$"
+
+parseCurlyOpen :: Parser String
+parseCurlyOpen = try (char '{') >> return "\\{"
+
+parseCurlyClose :: Parser String
+parseCurlyClose = try (char '}') >> return "\\}"
 
 parsePercentage :: Parser String
 parsePercentage = try (char '%') >> return "\\%"
@@ -108,7 +116,7 @@ parseNumbered :: Parser Numbered
 parseNumbered = parseNumberOn <|> return NumberOff
 
 parseNumberOn :: Parser Numbered
-parseNumberOn = parseFuncName "num" >> fmap NumberOn parseId
+parseNumberOn = fmap NumberOn parseId
 
 parseCharFunc :: Char -> Parser Char
 parseCharFunc character = try $ do

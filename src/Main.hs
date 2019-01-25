@@ -71,7 +71,7 @@ striptx filepath =
 
 junkFileExtensions :: [String]
 junkFileExtensions =
-    ["aux", "bbl", "bcf", "blg", "fdb_latexmk", "fls", "log", "out", "run.xml", "tex"]
+    ["aux", "bbl", "bcf", "blg", "fdb_latexmk", "fls", "log", "out", "run.xml", "tex", "toc"]
 
 junkFiles :: String -> [String]
 junkFiles fileRoot = map ((fileRoot ++ ".") ++) junkFileExtensions

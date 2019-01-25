@@ -80,6 +80,7 @@ body2latex header (DocumentBody elements) =
 element2latex :: Element -> String
 element2latex element = case element of
     Text text -> text
+    TableOfContents -> "\\tableofcontents "
     Italic text -> concat ["\\textit{", text, "}"]
     Url text -> concat ["\\url{", text, "}"]
     Hyperlink visible link -> concat ["\\href{", link, "}", "{", visible, "}" ]
@@ -278,6 +279,7 @@ data Element
   | CodeFromFile (Maybe Language) FilePath
   | Url String
   | Hyperlink String String
+  | TableOfContents
     deriving Show
 
 newtype Language = Language String deriving Show
@@ -367,6 +369,7 @@ parseElement :: Parser Element
 parseElement = choice
     [ parseText
     , parseItalic
+    , parseTableOfContents
     , parseCode
     , parseMonospace
     , MathElement <$> parseDisplayMath
@@ -385,6 +388,11 @@ parseElement = choice
     , parseBulletPoints
     , parseNumberedList
     ]
+
+parseTableOfContents :: Parser Element
+parseTableOfContents = do
+  _ <- parseFuncName "tableofcontents"
+  return TableOfContents
 
 parseItalic :: Parser Element
 parseItalic = do
