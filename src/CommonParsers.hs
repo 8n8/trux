@@ -1,4 +1,16 @@
-module CommonParsers where
+module CommonParsers
+    ( Id(..)
+    , Numbered(..)
+    , Parser
+    , parseCharFunc
+    , parseFuncName
+    , parseList
+    , parseNumbered
+    , parseTextContent
+    , parseWhiteSpace
+    , rowsSameLength
+    , parseId
+    ) where
 
 import Control.Monad
 import Data.Void ( Void )
@@ -40,15 +52,20 @@ parseWord = try $ do
     return $ openQuote ++ concat word
 
 parseSpecialChar :: Parser String
-parseSpecialChar = try $ choice
-    [ parseDollar
-    , parsePercentage
-    , parseUnderscore
-    , parseTilde
-    , parseBackslash
-    , parseCurlyOpen
-    , parseCurlyClose
-    , parseAmpersand ]
+parseSpecialChar =
+    try $ choice $ map simpleSub (substitutions ++ escapeSubs)
+
+simpleSub :: (Char, String) -> Parser String
+simpleSub (c, sub) = try (char c) >> return sub
+
+substitutions :: [(Char, String)]
+substitutions =
+    [ ('~', "\\textasciitilde")
+    , ('\\', "\\textbackslash")
+    ]
+
+escapeSubs :: [(Char, String)]
+escapeSubs = map (\c -> (c, ['\\', c])) "${}%_~#&"
 
 parseOpenQuote :: Parser String
 parseOpenQuote = try $
@@ -64,37 +81,7 @@ wordChars =
     "abcdefghijklmnopqrstuvwxyz\
     \ABCDEFGHIJKLMNOPQRSTUVWXYZ\
     \01234567890\
-    \!\"£*()-+=[];:'@#,<.>/?|"
-
-parseAmpersand :: Parser String
-parseAmpersand = try (char '&') >> return "\\&"
-
-parseDecimal :: Parser String
-parseDecimal = try $ do
-    _ <- try $ char '.'
-    _ <- notFollowedBy parseWhiteSpace
-    return "."
-
-parseDollar :: Parser String
-parseDollar = try (char '$') >> return "\\$"
-
-parseCurlyOpen :: Parser String
-parseCurlyOpen = try (char '{') >> return "\\{"
-
-parseCurlyClose :: Parser String
-parseCurlyClose = try (char '}') >> return "\\}"
-
-parsePercentage :: Parser String
-parsePercentage = try (char '%') >> return "\\%"
-
-parseUnderscore :: Parser String
-parseUnderscore = try (char '_') >> return "\\_"
-
-parseTilde :: Parser String
-parseTilde = try (char '~') >> return "\\textasciitilde "
-
-parseBackslash :: Parser String
-parseBackslash = try (char '\\') >> return "\\textbackslash "
+    \!\"£*()-+=[];:'@,<.>/?|"
 
 parseList :: (Show c) => Char -> Char -> Parser c -> Parser [c]
 parseList startChar stopChar parseItem = do
@@ -106,7 +93,8 @@ parseList startChar stopChar parseItem = do
     return content
 
 parseFuncName :: String -> Parser String
-parseFuncName name = try $ string name >> parseWhiteSpace >> return name
+parseFuncName name =
+    try $ string name >> parseWhiteSpace >> return name
 
 data Numbered = NumberOn Id | NumberOff deriving Show
 
