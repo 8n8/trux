@@ -33,7 +33,7 @@ mathElement2Latex mathElement = case mathElement of
     OverArrow content -> concat ["\\vec{", mathElement2Latex content, "}"]
     MathNumbers numbers -> numbers
     GreekMath BoldMath greek -> concat ["\\bm{\\", greek, "}"]
-    GreekMath ItalicMath greek -> "\\" ++ greek
+    GreekMath ItalicMath greek -> "\\" ++ greek ++ " "
     Sqrt contents -> concat ["\\sqrt{", math2Latex contents, "}"]
     NthRoot n contents -> concat
         [ "\\sqrt["
