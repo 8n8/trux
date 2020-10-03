@@ -59,11 +59,6 @@ mathElement2Latex mathElement = case mathElement of
         concat ["\\left|", math2Latex contents, "\\right|"]
     Condition contents ->
         concat ["\\condition{for $", math2Latex contents, "$}"]
-    Integral contents wrt -> concat
-        [ "\\int "
-        , math2Latex contents
-        , "\\dif "
-        , mathElement2Latex wrt ]
     OrdinaryDerivative ofvar wrt degree -> concat
         [ "\\dod"
         , derivDegree2Latex degree
@@ -171,7 +166,6 @@ data MathElement
   | CurvedBracket [MathElement]
   | SquareBracket [MathElement]
   | AbsoluteBracket [MathElement]
-  | Integral [MathElement] MathElement
   | PartialDerivative MathElement MathElement Char
   | OrdinaryDerivative MathElement MathElement Char
   | Condition [MathElement]
@@ -209,7 +203,7 @@ parseMathElement = choice
     , parsePartialDerivative
     , parseMixedPartialDerivative
     , parseMatrix
-    , parseIntegral ]
+    ]
 
 parseMathOrdinaryText :: Parser MathElement
 parseMathOrdinaryText = fmap MathOrdinaryText parseTextContent
@@ -276,6 +270,12 @@ parseGeneralSimpleSub (truxcode, latexcode) =
 simpleSubstitutions :: [(String, String)]
 simpleSubstitutions =
     [ ("exp", "\\exp ")
+    , ("int", "\\int ")
+    , ("lim", "\\lim ")
+    , ("infinity", "\\infty ")
+    , ("-->", "\\rightarrow ")
+    , ("==>", "\\Rightarrow ")
+    , ("sum", "\\sum ")
     , ("log", "\\log ")
     , ("ln", "\\ln ")
     , ("sin", "\\sin ")
@@ -285,7 +285,7 @@ simpleSubstitutions =
     , ("cosh", "\\cosh ")
     , ("tanh", "\\tanh ")
     , ("dif", "\\dif ")
-    , ("*", "\\times ") 
+    , ("*", "\\times ")
     , ("star", "*")
     , ("<=", "\\leq ")
     , (">=", "\\geq ")
@@ -438,13 +438,6 @@ parseMixedPartialDerivative = do
     wrt3 <- parseGreekMath <|> parseMathEnglishVar
     degree3 <- parseSingleDigit
     return $ MixedPartialDerivative wrt1 degree1 wrt2 degree2 wrt3 degree3
-
-parseIntegral :: Parser MathElement
-parseIntegral = do
-    _ <- parseFuncName "int"
-    content <- parseList '{' '}' parseMathElement
-    wrt <- parseMathElement
-    return $ Integral content wrt
 
 parseSingleDigit :: Parser Char
 parseSingleDigit = do

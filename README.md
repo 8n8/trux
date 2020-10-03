@@ -24,6 +24,9 @@ Trux is a wrapper around Latex for writing reports more easily.  Trux only expos
          * [Bold variables](#bold-variables)
          * [Ordinary derivatives](#ordinary-derivatives)
          * [Partial derivatives](#partial-derivatives)
+         * [Indefinite integrals](#indefinite-integrals)
+         * [Definite integrals](#definite-integrals)
+         * [Limits](#limits)
          * [Multiline equations](#multiline-equations)
          * [Primes](#primes)
          * [Brackets](#brackets)
@@ -45,6 +48,8 @@ Trux is a wrapper around Latex for writing reports more easily.  Trux only expos
 # Installation
 
 This installation has been tested in Ubuntu Linux 18.04.
+
+Latex is required. In Ubuntu, this can be installed with ```sudo apt install texlive-full```.
 
 First install Git and the [Haskell Tool Stack](https://docs.haskellstack.org/en/stable/README/).  Then clone this repository, cd into it and run ```stack install```.
 
@@ -316,6 +321,36 @@ Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 curlyd curlyd } }
 
 ![partial derivatives](examples/partialderivatives.png)
 
+### Indefinite integrals
+
+```
+body {
+Math { equation { int 3 x ^2 + 42 dif x } }
+}
+```
+
+![indefinite integrals](examples/indefiniteintegrals.png)
+
+### Definite integrals
+
+```
+body {
+Math { equation { int _a ^b 2 x ^3 - 55 dif x } }
+}
+```
+
+![definite integrals](examples/definiteintegrals.png)
+
+### Limits
+
+```
+body {
+Math { equation { lim _ { x --> infinity } q = 23 } }
+}
+```
+
+![limits](examples/limits.png)
+
 ### Multiline equations
 
 ```
@@ -404,11 +439,21 @@ math { in notin owns subset subset= superset superset= intersect union empty dif
 
 ![set](examples/set.png)
 
+### Arrows
+
+```
+body {
+math { --> ==> }
+}
+```
+
+![arrows](examples/arrows.png)
+
 ### Other mathematical symbols
 
 ```
 body {
-math { ! = % - + ' < > . , ; : @ " / exp log ln * star <= >= ~= != mod max min +- sqrt { x ^2 + 3 y } nthRoot 3 { x ^4 - 2 z } }
+math { infinity ! = % - + ' < > . , ; : @ " / exp log ln * star <= >= ~= != mod max min +- sqrt { x ^2 + 3 y } nthRoot 3 { x ^4 - 2 z } }
 }
 ```
 
