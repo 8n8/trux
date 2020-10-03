@@ -3,7 +3,7 @@ module Main where
 import System.Environment ( getArgs )
 import System.Process ( callProcess )
 import Parser ( parse2Latex )
-import Text.Megaparsec ( parse, parseErrorPretty )
+import Text.Megaparsec ( parse, errorBundlePretty )
 import System.Directory ( removeFile )
 import System.IO.Error ( isDoesNotExistError )
 import Control.Exception ( catch, throwIO )
@@ -20,7 +20,7 @@ main = do
     _ <- Fsn.watchDir
         mgr
         container
-        (predicate filepath) 
+        (predicate filepath)
         (\_ -> runOnce filepath)
     forever $ threadDelay 1000000
   return ()
@@ -46,7 +46,7 @@ fileName filePath =
         f (reverse filePath) ""
 
 predicate :: String -> Fsn.Event -> Bool
-predicate filePath (Fsn.Modified fpModified _) =
+predicate filePath (Fsn.Modified fpModified _ _) =
     (fileName fpModified) == filePath
 predicate _ _ = False
 
@@ -55,7 +55,7 @@ runOnce filepath = do
   filecontents <- readFile filepath
   let fileRoot = (striptx filepath)
   case parse parse2Latex filepath filecontents of
-      Left err -> putStrLn (parseErrorPretty err)
+      Left err -> putStrLn (errorBundlePretty err)
       Right latex -> do
           writeFile (fileRoot ++ ".tex") latex
           _ <- callProcess "latexmk"
