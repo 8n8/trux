@@ -336,6 +336,7 @@ parseBody :: Parser DocumentBody
 parseBody = do
     _ <- parseFuncName "body"
     body <- parseList bracket1 bracket2 parseElement
+    _ <- eof
     return $ DocumentBody body
 
 parseTitle :: Parser Title
