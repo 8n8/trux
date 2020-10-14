@@ -407,7 +407,9 @@ parseSquareBracket :: Parser MathElement
 parseSquareBracket = SquareBracket <$> parseList '[' ']' parseMathElement
 
 parseAbsolute :: Parser MathElement
-parseAbsolute = AbsoluteBracket <$> parseList '|' '|' parseMathElement
+parseAbsolute = do
+    _ <- parseFuncName "abs"
+    AbsoluteBracket <$> parseList '{' '}' parseMathElement
 
 parseOrdinaryDerivative :: Parser MathElement
 parseOrdinaryDerivative = do

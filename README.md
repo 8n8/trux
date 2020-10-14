@@ -15,6 +15,7 @@ Trux is a wrapper around Latex for writing reports more easily.  Trux only expos
       * [Section headings](#section-headings)
       * [Insert an image into the document](#insert-an-image-into-the-document)
       * [Tables](#tables)
+      * [Code](#code)
       * [Mathematics](#mathematics)
          * [Inline mathematics](#inline-mathematics)
          * [Display-mode mathematics](#display-mode-mathematics)
@@ -225,6 +226,18 @@ table someref3 { `Cowered outside up because fed` } {
 
 ![tables](examples/table.png)
 
+## Code
+
+Insert some code from another file, verbatim.
+
+```
+body {
+code `someCode.sh`
+}
+```
+
+![code](examples/code.png)
+
 ## Mathematics
 
 ### Inline mathematics
@@ -383,7 +396,7 @@ All sorts of brackets.
 ```
 body {
 Math { equation {
-( od a b 1 ) [ { c + 3 x ^3 } / { d q ^4 } ] ( e ) [ f ] curly { { 5 } / { 3 } }
+( od a b 1 ) [ { c + 3 x ^3 } / { d q ^4 } ] ( e ) [ f ] curly { { 5 } / { 3 } abs { { x } / { y } } }
 }
 }
 }
