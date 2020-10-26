@@ -524,6 +524,8 @@ parseFootnoteElement = choice
     , parseMonospace
     , parseBold
     , parseElementSimpleSub
+    , parseHyperlink
+    , parseUrl
     , parseUmlaut ]
 
 parseHeaderElement :: Parser Element
