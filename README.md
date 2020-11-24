@@ -32,6 +32,7 @@ Trux is a wrapper around Latex for writing reports more easily.  Trux only expos
          * [Primes](#primes)
          * [Brackets](#brackets)
          * [Ordinary text inside equation](#ordinary-text-inside-equation)
+         * [Bold ordinary text inside equation](#bold-ordinary-text-inside-equation)
          * [Matrices and vectors](#matrices-and-vectors)
          * [Trig symbols](#trig-symbols)
          * [Set symbols](#set-symbols)
@@ -413,6 +414,16 @@ Math { equation { a + b + c = 3 ` some ordinary text` } }
 ```
 
 ![ordinary text in equation](examples/mathText.png)
+
+### Bold ordinary text inside equation
+
+Useful for *curl*.
+
+```
+body {
+Math { equation { #`bold ordinary text` } }
+}
+```
 
 ### Matrices and vectors
 

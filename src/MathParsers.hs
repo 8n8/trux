@@ -22,6 +22,7 @@ math2Latex = concatMap mathElement2Latex
 mathElement2Latex :: MathElement -> String
 mathElement2Latex mathElement = case mathElement of
     MathOrdinaryText text -> concat ["\\textrm{", text, "}"]
+    MathBoldText text -> concat ["\\textbf{", text, "}" ]
     MathEnglishVar BoldMath var -> concat ["\\bm{", [var], "}"]
     MathEnglishVar ItalicMath var -> [var]
     MathOperatorChar operator -> [operator]
@@ -147,6 +148,7 @@ equation2latex (DisplayMathLine numbered elements) = case numbered of
 
 data MathElement
   = MathOrdinaryText String
+  | MathBoldText String
   | MathEnglishVar MathStyle Char
   | Hat MathElement
   | Overline MathElement
@@ -179,6 +181,7 @@ data MathStyle = BoldMath | ItalicMath deriving Show
 parseMathElement :: Parser MathElement
 parseMathElement = choice
     [ parseMathOrdinaryText
+    , parseMathBoldText
     , parseMathOperatorChar
     , parseHat
     , parseOverline
@@ -231,6 +234,12 @@ parseMathBoldChar = try $ do
     _ <- try $ char '#'
     character <- parseMathEnglishChar
     return $ MathEnglishVar BoldMath character
+
+parseMathBoldText :: Parser MathElement
+parseMathBoldText = try $ do
+    _ <- try $ char '#'
+    txt <- parseTextContent
+    return $ MathBoldText txt
 
 parseMathItalicChar :: Parser MathElement
 parseMathItalicChar = try $ do
