@@ -417,13 +417,15 @@ Math { equation { a + b + c = 3 ` some ordinary text` } }
 
 ### Bold ordinary text inside equation
 
-Useful for *curl*.
+Useful for **curl**.
 
 ```
 body {
 Math { equation { #`bold ordinary text` } }
 }
 ```
+
+![bold text in equation](examples/boldMathOrdinary.png)
 
 ### Matrices and vectors
 
