@@ -318,7 +318,8 @@ simpleSubstitutions =
     , ("curlyd", "\\partial ")
     , ("%", "\\% ")
     , ("deg", "^{\\circ} ")
-    , ("dot", "\\cdot ") ]
+    , ("dot", "\\cdot ")
+    , ("nabla", "\\nabla ") ]
 
 parseSqrt :: Parser MathElement
 parseSqrt = do
