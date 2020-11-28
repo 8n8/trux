@@ -319,7 +319,7 @@ simpleSubstitutions =
     , ("%", "\\% ")
     , ("deg", "^{\\circ} ")
     , ("dot", "\\cdot ")
-    , ("nabla", "\\nabla ") ]
+    ]
 
 parseSqrt :: Parser MathElement
 parseSqrt = do
@@ -466,12 +466,12 @@ greekMathVars =
     , "zeta", "eta", "theta", "Theta", "iota", "lambda", "Lambda", "mu"
     , "nu", "xi", "Xi", "pi", "Pi", "rho", "sigma", "Sigma", "tau"
     , "upsilon", "Upsilon", "phi", "Phi", "chi", "psi", "Psi", "omega"
-    , "Omega"]
+    , "Omega", "nabla"]
 
 parseDisplayMath :: Parser Math
 parseDisplayMath = do
     _ <- parseFuncName "Math"
-    content <- parseList '{' '}' parseDisplayMathLine 
+    content <- parseList '{' '}' parseDisplayMathLine
     return $ DisplayMath content
 
 parseDisplayMathLine :: Parser DisplayMathLine
