@@ -348,7 +348,7 @@ Math { equation { int 3 x ^2 + 42 dif x } }
 
 ```
 body {
-Math { equation { int _a ^b 2 x ^3 - 55 dif x } }
+Math { equation { int _a ^b 2 x ^3 - 55 dif x oint _S #F dif x } }
 }
 ```
 

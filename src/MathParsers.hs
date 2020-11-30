@@ -280,6 +280,7 @@ simpleSubstitutions :: [(String, String)]
 simpleSubstitutions =
     [ ("exp", "\\exp ")
     , ("int", "\\int ")
+    , ("oint", "\\oint ")
     , ("lim", "\\lim ")
     , ("infinity", "\\infty ")
     , ("-->", "\\rightarrow ")
