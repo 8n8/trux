@@ -316,7 +316,7 @@ simpleSubstitutions =
     , ("max", "\\max ")
     , ("min", "\\min ")
     , ("+-", "\\pm ")
-    , ("curlyd", "\\partial ")
+    , ("~d", "\\partial ")
     , ("%", "\\% ")
     , ("deg", "^{\\circ} ")
     , ("dot", "\\cdot ")

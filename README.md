@@ -328,7 +328,7 @@ Math { equation { od x y 1 od x y 3 od a b 5 od omega psi 4 dif x dif y dif a } 
 
 ```
 body {
-Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 curlyd curlyd } }
+Math { equation { pd #eta Sigma 1 pd x y 2 pdMix f 6 x 2 y 3 ~d ~d } }
 }
 ```
 
