@@ -58,6 +58,8 @@ mathElement2Latex mathElement = case mathElement of
         concat ["\\left[", math2Latex contents, "\\right]"]
     AbsoluteBracket contents ->
         concat ["\\left|", math2Latex contents, "\\right|"]
+    NormBracket contents ->
+        concat ["\\norm{", math2Latex contents, "}"]
     Condition contents ->
         concat ["\\condition{for $", math2Latex contents, "$}"]
     OrdinaryDerivative ofvar wrt degree -> concat
@@ -168,6 +170,7 @@ data MathElement
   | CurvedBracket [MathElement]
   | SquareBracket [MathElement]
   | AbsoluteBracket [MathElement]
+  | NormBracket [MathElement]
   | PartialDerivative MathElement MathElement Char
   | OrdinaryDerivative MathElement MathElement Char
   | Condition [MathElement]
@@ -202,6 +205,7 @@ parseMathElement = choice
     , parseCurvedBracket
     , parseSquareBracket
     , parseAbsolute
+    , parseNorm
     , parseOrdinaryDerivative
     , parsePartialDerivative
     , parseMixedPartialDerivative
@@ -427,6 +431,11 @@ parseAbsolute :: Parser MathElement
 parseAbsolute = do
     _ <- parseFuncName "abs"
     AbsoluteBracket <$> parseMathList
+
+parseNorm :: Parser MathElement
+parseNorm = do
+    _ <- parseFuncName "norm"
+    NormBracket <$> parseMathList
 
 parseOrdinaryDerivative :: Parser MathElement
 parseOrdinaryDerivative = do

@@ -397,7 +397,7 @@ All sorts of brackets.
 ```
 body {
 Math { equation {
-( od a b 1 ) [ { c + 3 x ^3 } / { d q ^4 } ] ( e ) [ f ] curly { { 5 } / { 3 } abs { { x } / { y } } }
+( od a b 1 ) [ { c + 3 x ^3 } / { d q ^4 } ] ( e ) [ f ] curly { { 5 } / { 3 } abs { { x } / { y } } } norm { { q } / { r } }
 }
 }
 }
