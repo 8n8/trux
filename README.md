@@ -37,6 +37,7 @@ Trux is a wrapper around Latex for writing reports more easily.  Trux only expos
          * [Trig symbols](#trig-symbols)
          * [Set symbols](#set-symbols)
          * [Other mathematical symbols](#other-mathematical-symbols)
+	 * [Lines over and under](#lines-over-and-under)
          * [Equation numbers](#equation-numbers)
       * [Citations](#citations)
       * [Links and urls](#links-and-urls)
@@ -483,6 +484,20 @@ math { infinity ! = % - + ' < > . , ; : @ " / exp log ln * star <= >= ~= != mod 
 ```
 
 ![otherMath](examples/otherMath.png)
+
+### Lines over and under
+
+```
+body {
+Math {
+equation {
+overline { a b } underline { c d } overarrow e
+}
+}
+}
+```
+
+![overUnder](examples/overUnder.png)
 
 ### Equation numbers
 

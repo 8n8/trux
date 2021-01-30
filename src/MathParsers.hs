@@ -29,8 +29,8 @@ mathElement2Latex mathElement = case mathElement of
     Hollow character -> concat ["\\mathbb{", character:"}"]
     SimpleSubstitution latex -> latex
     Hat content -> concat ["\\hat{", mathElement2Latex content, "}"]
-    Overline content -> concat ["\\overline{", mathElement2Latex content, "}"]
-    Underline content -> concat ["\\underline{", mathElement2Latex content, "}"]
+    Overline content -> concat ["\\overline{", math2Latex content, "}"]
+    Underline content -> concat ["\\underline{", math2Latex content, "}"]
     OverArrow content -> concat ["\\vec{", mathElement2Latex content, "}"]
     MathNumbers numbers -> numbers
     GreekMath BoldMath greek -> concat ["\\bm{\\", greek, "}"]
@@ -151,9 +151,9 @@ data MathElement
   | MathBoldText String
   | MathEnglishVar MathStyle Char
   | Hat MathElement
-  | Overline MathElement
+  | Overline [MathElement]
   | OverArrow MathElement
-  | Underline MathElement
+  | Underline [MathElement]
   | Hollow Char
   | SimpleSubstitution String
   | MathOperatorChar Char
@@ -339,24 +339,30 @@ parseHat :: Parser MathElement
 parseHat = parseFuncName "hat" >> Hat <$> parseMathElement
 
 parseOverline :: Parser MathElement
-parseOverline = parseFuncName "overline" >> Overline <$> parseMathElement
+parseOverline = parseFuncName "overline" >> Overline <$> parseMathList
 
 parseUnderline :: Parser MathElement
 parseUnderline =
-    parseFuncName "underline" >> Underline <$> parseMathElement
+    parseFuncName "underline" >> Underline <$> parseMathList
 
 parseOverArrow :: Parser MathElement
 parseOverArrow =
-    parseFuncName "overArrow" >> OverArrow <$> parseMathElement
+    parseFuncName "overarrow" >> OverArrow <$> parseMathElement
+
+
+parseMathList :: Parser [MathElement]
+parseMathList =
+    parseList '{' '}' parseMathElement
+
 
 parsePower :: Parser MathElement
 parsePower = parseShortPower <|> parseLongPower
 
 parseFraction :: Parser MathElement
 parseFraction = do
-    numerator <- parseList '{' '}' parseMathElement
+    numerator <- parseMathList
     _ <- parseFuncName "/"
-    denominator <- parseList '{' '}' parseMathElement
+    denominator <- parseMathList
     return $ Fraction numerator denominator
 
 parseSubscript :: Parser MathElement
@@ -378,7 +384,7 @@ parseMatrixRow = parseList '{' '}' $ parseList '{' '}' parseMathElement
 parseCurlyBracket :: Parser MathElement
 parseCurlyBracket = do
     _ <- parseFuncName "curly"
-    content <- parseList '{' '}' parseMathElement
+    content <- parseMathList
     return $ CurlyBracket content
 
 parseShortSubscript :: Parser MathElement
@@ -390,7 +396,7 @@ parseShortSubscript = try $ do
 parseLongSubscript :: Parser MathElement
 parseLongSubscript = do
     _ <- parseFuncName "_"
-    content <- parseList '{' '}' parseMathElement
+    content <- parseMathList
     case content of
         [_] -> fail "For subscripts containing only one element, use \
             \_element notation, such as x _3."
@@ -405,7 +411,7 @@ parseShortPower = try $ do
 parseLongPower :: Parser MathElement
 parseLongPower = do
     _ <- parseFuncName "^"
-    content <- parseList '{' '}' parseMathElement
+    content <- parseMathList
     case content of
         [_] -> fail "For powers containing only one element, use ^element \
             \notation, such as e ^x."
@@ -420,7 +426,7 @@ parseSquareBracket = SquareBracket <$> parseList '[' ']' parseMathElement
 parseAbsolute :: Parser MathElement
 parseAbsolute = do
     _ <- parseFuncName "abs"
-    AbsoluteBracket <$> parseList '{' '}' parseMathElement
+    AbsoluteBracket <$> parseMathList
 
 parseOrdinaryDerivative :: Parser MathElement
 parseOrdinaryDerivative = do
@@ -479,7 +485,7 @@ parseDisplayMathLine :: Parser DisplayMathLine
 parseDisplayMathLine = do
     _ <- parseFuncName "equation"
     numbered <- parseNumbered
-    content <- parseList '{' '}' parseMathElement
+    content <- parseMathList
     return $ DisplayMathLine numbered content
 
 mathOperatorChars :: String
@@ -499,7 +505,7 @@ parseMathEnglishCapitals =
 parseInlineMathContent :: Parser [MathElement]
 parseInlineMathContent = do
     _ <- parseFuncName "math"
-    parseList '{' '}' parseMathElement
+    parseMathList
 
 parseInlineMath :: Parser Math
 parseInlineMath = fmap InlineMath parseInlineMathContent
