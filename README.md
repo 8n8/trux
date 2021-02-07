@@ -1,5 +1,8 @@
-Trux is a wrapper around Latex for writing reports more easily.  Trux only exposes a small subset of Latex, but it chooses sensible defaults and has much better error messages.  The main difference from convert-markdown-to-Latex tools, like Pandoc is that Trux is much better for writing mathematics.
+Trux is a Latex generator for writing reports more easily.  Trux only exposes a small subset of Latex, but it chooses sensible defaults and has much better error messages.  The main difference from convert-markdown-to-Latex tools, like Pandoc is that Trux is much better for writing mathematics.
 
+The main aim of the project is that a correct Trux program will never generate Latex errors. This aim is not fully met yet, for example when referring to a non-existent file in an image include.
+
+The main motivations for writing this program are that I got fed up with trying to read Latex error messages, and also with trying to remember all the little tricks necessary to get Latex to do what I need it to do.
 
    * [Installation](#installation)
    * [Usage (Linux)](#usage-linux)
