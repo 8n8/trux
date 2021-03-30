@@ -32,6 +32,8 @@ preamble :: String
 preamble =
     "\\documentclass{article}\n\
     \\\usepackage[utf8]{inputenc}\n\
+    \\\usepackage[T1]{fontenc}\n\
+    \\\usepackage{lmodern}\n\
     \\\usepackage{microtype}\n\
     \\\usepackage{listings}\n\
     \\\usepackage[hidelinks]{hyperref}\n\
