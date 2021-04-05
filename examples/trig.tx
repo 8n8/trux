@@ -1,3 +1,3 @@
 body {
-Math { equation { sin cos tan sinh cosh tanh } }
+Math { equation { sin cos tan sinh cosh tanh cot sec csc arccos arcsin arctan } }
 }
