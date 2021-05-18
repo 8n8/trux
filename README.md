@@ -452,7 +452,7 @@ Math { equation {
 
 ```
 body {
-Math { equation { sin cos tan sinh cosh tanh cot sec csc arccos arcsin arctan } }
+Math { equation { sin cos tan sinh cosh tanh coth cot sec csc arccos arcsin arctan } }
 }
 ```
 

@@ -303,6 +303,7 @@ simpleSubstitutions =
     , ("tan", "\\tan ")
     , ("sinh", "\\sinh ")
     , ("cosh", "\\cosh ")
+    , ("coth", "\\coth ")
     , ("tanh", "\\tanh ")
     , ("dif", "\\dif ")
     , ("*", "\\times ")
