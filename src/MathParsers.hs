@@ -97,11 +97,11 @@ mathElement2Latex mathElement = case mathElement of
           rowLen = length . head $ contents
           alignments = take rowLen $ repeat 'c'
         in concat
-          [ "\\begin{array}{"
+          [ "\\begin{matrix}{"
           , alignments
           , "}"
           , concat $ intersperse " \\\\ " $ map matrixRow2Latex contents
-          , "\\end{array}"
+          , "\\end{matrix}"
           ]
 
 matrixRow2Latex :: [[MathElement]] -> String
