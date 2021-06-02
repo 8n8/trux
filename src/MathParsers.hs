@@ -93,13 +93,8 @@ mathElement2Latex mathElement = case mathElement of
         , [degree3]
         , "}" ]
     Matrix contents ->
-        let
-          rowLen = length . head $ contents
-          alignments = take rowLen $ repeat 'c'
-        in concat
-          [ "\\begin{matrix}{"
-          , alignments
-          , "}"
+        concat
+          [ "\\begin{matrix}"
           , concat $ intersperse " \\\\ " $ map matrixRow2Latex contents
           , "\\end{matrix}"
           ]
