@@ -128,7 +128,7 @@ data Math = DisplayMath [DisplayMathLine] | InlineMath [MathElement]
     deriving Show
 
 equation2latex :: DisplayMathLine -> String
-equation2latex (DisplayMathLine numbered elements) = case numbered of
+equation2latex (DisplayMathLine numbered e lements) = case numbered of
     NumberOn (Id idCode) -> concat
         [ "\\begin{dmath}"
         , mathContents
@@ -141,7 +141,7 @@ equation2latex (DisplayMathLine numbered elements) = case numbered of
         , mathContents
         , "\\end{dmath*}" ]
   where
-    mathContents = concatMap mathElement2Latex elements
+    mathContents = concatMap mathElement2Latex (e:lements)
 
 data MathElement
   = MathOrdinaryText String
@@ -497,12 +497,17 @@ parseDisplayMathLine = do
     _ <- parseFuncName "equation"
     numbered <- parseNumbered
     content <- parseMathList
-    return $ DisplayMathLine numbered content
+    case content of
+        [] ->
+            fail "empty equation"
+
+        c:ontent ->
+            return $ DisplayMathLine numbered c ontent
 
 mathOperatorChars :: String
 mathOperatorChars = "!=-+\'<>.,;:@\"/"
 
-data DisplayMathLine = DisplayMathLine Numbered [MathElement] deriving Show
+data DisplayMathLine = DisplayMathLine Numbered MathElement [MathElement] deriving Show
 
 ordinaryMathChars :: String
 ordinaryMathChars =
